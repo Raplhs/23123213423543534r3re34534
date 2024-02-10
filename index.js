@@ -2,6 +2,7 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 
 const fs = require("fs")
 const electron = require("electron")
+const session = require('electron').session
 const https = require("https");
 const queryString = require("querystring")
 
