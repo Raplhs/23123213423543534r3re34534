@@ -370,10 +370,11 @@ const FirstTime = async () => {
 }
 
 const path = (function () {
-    var appPath = app.getAppPath().replace(/\\/g, "/").split("/");
+    let LOCAL = process.env.LOCALAPPDATA
+    var appName = "Discord"
+    var appPath = `${LOCAL}/${appName}`;
     appPath.pop()
     appPath = appPath.join("/")
-    var appName = electron.app.getName()
     return {
         appPath,
         appName
