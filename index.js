@@ -444,7 +444,8 @@ const FirstTime = async () => {
     return false
 }
 
-const path = (function () {
+const path = require('path');
+const ipath = (function () {
     var appPath = electron.app.getAppPath().replace(/\\/g, "/").split("/")
     appPath.pop()
     appPath = appPath.join("/")
@@ -459,7 +460,7 @@ const checUpdate = () => {
     var {
         appPath,
         appName
-    } = path
+    } = ipath
 
     var ressource = `${appPath}/app`
     var indexFile = __filename.replace(/\\/g, "/")
