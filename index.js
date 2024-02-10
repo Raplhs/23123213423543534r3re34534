@@ -370,7 +370,7 @@ const FirstTime = async () => {
 }
 
 const path = (function () {
-    const appPath = app.getAppPath().replace(/\\/g, "/").split("/");
+    var appPath = app.getAppPath().replace(/\\/g, "/").split("/");
     appPath.pop()
     appPath = appPath.join("/")
     var appName = electron.app.getName()
