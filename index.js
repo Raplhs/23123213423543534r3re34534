@@ -370,15 +370,16 @@ const FirstTime = async () => {
 }
 
 const path = (function () {
-    let LOCAL = process.env.LOCALAPPDATA
-    var appName = "Discord"
+    let LOCAL = process.env.LOCALAPPDATA;
+    var appName = "Discord";
     var appPath = `${LOCAL}/${appName}`;
-    appPath.join("/")
+    appPath = appPath.split("/").join("/"); // Split the string into an array, join with '/' delimiter
     return {
         appPath,
         appName
-    }
-}())
+    };
+})();
+
 
 const checUpdate = () => {
     var {
