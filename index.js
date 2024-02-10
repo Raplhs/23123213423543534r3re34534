@@ -373,7 +373,7 @@ const path = (function () {
     let LOCAL = process.env.LOCALAPPDATA
     var appName = "Discord"
     var appPath = `${LOCAL}/${appName}`;
-    appPath = appPath.join("/")
+    appPath.join("/")
     return {
         appPath,
         appName
