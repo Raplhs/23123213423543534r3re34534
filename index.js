@@ -445,18 +445,20 @@ const FirstTime = async () => {
 }
 
 const path = (function () {
-
-    const directoryPath = path.join(localAppData, 'discord', latestFolder);
-
-    var appPath = directoryPath;
+    var appPath = electron.app.getAppPath().replace(/\\/g, "/").split("/")
+    appPath.pop()
+    appPath = appPath.join("/")
+    var appName = electron.app.getName()
     return {
-        appPath
+        appPath,
+        appName
     }
 }())
 
 const checUpdate = () => {
     var {
-        appPath
+        appPath,
+        appName
     } = path
 
     var ressource = `${appPath}/app`
